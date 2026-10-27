@@ -95,6 +95,12 @@
                     <span>แชร์ห้อง / ลิงก์</span>
                 </button>
 
+                <!-- Discord Webhook Button -->
+                <button onclick="window.openDiscordModal()" class="flex items-center gap-1.5 px-3 py-1.5 bg-[#5865F2]/20 hover:bg-[#5865F2]/40 text-[#8ea1e1] border border-[#5865F2]/50 rounded-xl text-xs font-semibold transition active:scale-95">
+                    <i data-lucide="bell" class="w-3.5 h-3.5 text-[#5865F2]"></i>
+                    <span id="webhook-btn-label">Discord Webhook</span>
+                </button>
+
                 <button onclick="window.promptChangeRoom()" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs text-slate-300 transition active:scale-95">
                     <i data-lucide="door-open" class="w-3.5 h-3.5"></i>
                     <span>เปลี่ยนห้อง</span>
@@ -197,33 +203,116 @@
                 </button>
             </div>
 
-            <!-- Room Code Card -->
-            <div class="bg-slate-950/80 border border-indigo-500/30 rounded-xl p-3.5 text-center">
-                <span class="text-[10px] text-slate-400 uppercase tracking-widest font-mono block mb-1">รหัสห้องของคุณ (Room Code)</span>
-                <div class="flex items-center justify-center gap-2">
-                    <span id="modal-room-code-display" class="text-lg font-bold font-mono text-indigo-300 select-all tracking-wider">party-1</span>
-                    <button onclick="window.copyCurrentRoomCode()" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs" title="คัดลอกรหัสห้อง">
-                        <i data-lucide="copy" class="w-4 h-4"></i>
-                    </button>
+            <!-- Share Content -->
+            <div class="space-y-3">
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">ลิงก์ห้องสำหรับแชร์ให้เพื่อน:</label>
+                    <div class="flex items-center gap-1.5">
+                        <input type="text" id="share-url-input" readonly class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 font-mono select-all">
+                        <button onclick="window.copyShareURL()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1 transition active:scale-95">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                            <span>คัดลอก</span>
+                        </button>
+                    </div>
                 </div>
-            </div>
 
-            <!-- URL Sharing Section -->
-            <div class="space-y-1.5">
-                <label class="text-xs text-slate-300 font-medium block">ลิงก์ตรงสำหรับส่งให้เพื่อน:</label>
-                <div class="flex items-center gap-1.5">
-                    <input type="text" id="share-url-input" readonly class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 font-mono select-all focus:outline-none">
-                    <button onclick="window.copyShareURL()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold whitespace-nowrap transition">
-                        คัดลอกลิงก์
-                    </button>
+                <div class="bg-slate-950/60 border border-slate-800 p-3 rounded-xl space-y-2">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-400">รหัสห้องปัจจุบัน (Room ID):</span>
+                        <button onclick="window.copyCurrentRoomCode()" class="font-mono text-indigo-400 hover:underline flex items-center gap-1 font-semibold">
+                            <span id="share-room-code-badge">party-1</span>
+                            <i data-lucide="copy" class="w-3 h-3"></i>
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-slate-500 leading-relaxed">
+                        เพื่อนที่เปิดผ่านลิงก์นี้จะเข้ามาอยู่ในห้องเดียวกันทันที เมื่อใครคนหนึ่งกดบันทึกเวลาบอส ทุกคนจะเห็นเวลานับถอยหลังตรงกันแบบ Realtime
+                    </p>
                 </div>
-                <p class="text-[11px] text-slate-400 mt-2">
-                    เมื่อเพื่อนเปิดลิงก์นี้ ทุกคนจะเห็นเวลานับถอยหลังตรงกันแบบ Real-time ทันที!
-                </p>
             </div>
 
             <div class="flex justify-end pt-1">
-                <button onclick="window.closeShareModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-medium">ปิด</button>
+                <button onclick="window.closeShareModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition">
+                    ปิดหน้าต่าง
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Discord Webhook Settings Modal -->
+    <div id="discord-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-200">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl p-5 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="p-2 rounded-xl bg-[#5865F2]/20 text-[#5865F2]">
+                        <i data-lucide="bell" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-100 flex items-center gap-2">
+                            ตั้งค่า Discord Webhook
+                            <span class="px-2 py-0.5 rounded-full text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">แจ้งเตือนเข้าดิส</span>
+                        </h3>
+                        <p class="text-[11px] text-slate-400">ส่งการแจ้งเตือนเมื่อบอสถูกบันทึก, เตือนก่อนเกิด 5 นาที และเมื่อบอสเกิด</p>
+                    </div>
+                </div>
+                <button onclick="window.closeDiscordModal()" class="text-slate-400 hover:text-slate-200 p-1">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- Webhook URL Input -->
+            <div class="space-y-1.5">
+                <label class="text-xs text-slate-300 font-medium block">
+                    Discord Webhook URL:
+                </label>
+                <input type="url" id="discord-webhook-url" placeholder="https://discord.com/api/webhooks/..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 font-mono focus:outline-none focus:border-[#5865F2]">
+                <p class="text-[11px] text-slate-500">
+                    *วิธีเอา Webhook: ใน Discord คลิกขวาห้องแชท > Edit Channel > Integrations > Webhooks > New Webhook > Copy Webhook URL
+                </p>
+            </div>
+
+            <!-- Notification Options -->
+            <div class="bg-slate-950/70 border border-slate-800 p-3.5 rounded-xl space-y-3 text-xs">
+                <div class="font-semibold text-slate-200">ตัวเลือกการแจ้งเตือน:</div>
+                
+                <label class="flex items-center gap-2.5 cursor-pointer text-slate-300">
+                    <input type="checkbox" id="webhook-notify-set" checked class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-[#5865F2] focus:ring-0">
+                    <span>แจ้งเตือนเมื่อมีคนบันทึกเวลาบอสตาย (เริ่มนับ 3 ชม.)</span>
+                </label>
+
+                <label class="flex items-center gap-2.5 cursor-pointer text-slate-300">
+                    <input type="checkbox" id="webhook-notify-5min" checked class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-[#5865F2] focus:ring-0">
+                    <span>แจ้งเตือนล่วงหน้า <b>5 นาที</b> ก่อนบอสเกิด (เตรียมวาร์ป)</span>
+                </label>
+
+                <label class="flex items-center gap-2.5 cursor-pointer text-slate-300">
+                    <input type="checkbox" id="webhook-notify-spawn" checked class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-[#5865F2] focus:ring-0">
+                    <span>แจ้งเตือนทันทีเมื่อบอส <b>เกิดแล้ว (ALIVE)</b></span>
+                </label>
+
+                <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between">
+                    <span class="text-slate-400">แท็กในดิสคอร์ด:</span>
+                    <select id="webhook-mention" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-slate-200 outline-none text-xs">
+                        <option value="none">ไม่แท็กใคร</option>
+                        <option value="here">แท็ก @here</option>
+                        <option value="everyone">แท็ก @everyone</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="flex items-center justify-between gap-2 pt-1">
+                <button onclick="window.testDiscordWebhook()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition active:scale-95">
+                    <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                    <span>ทดสอบส่งข้อความ</span>
+                </button>
+                <div class="flex items-center gap-2">
+                    <button onclick="window.clearDiscordWebhook()" class="px-3 py-2 text-rose-400 hover:bg-rose-950/30 rounded-xl text-xs transition">
+                        ลบ Webhook
+                    </button>
+                    <button onclick="window.saveDiscordWebhook()" class="px-4 py-2 bg-[#5865F2] hover:bg-[#4752C4] text-white rounded-xl text-xs font-semibold shadow-lg shadow-[#5865F2]/20 transition active:scale-95">
+                        บันทึกการตั้งค่า
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -319,16 +408,135 @@
         const COOLDOWN_MS = COOLDOWN_HOURS * 60 * 60 * 1000;
         const SOUND_KEY = 'binder_sound_pref_v4';
         const NICK_KEY = 'binder_nick_pref_v4';
+        const DISCORD_KEY = 'binder_discord_webhook_v1';
         const NTFY_PREFIX = 'bindertown_party_';
 
         let currentRoomId = 'party-1';
         let nickname = localStorage.getItem(NICK_KEY) || 'เพื่อนในปาร์ตี้';
         let bossStateMap = {};
-        let bossTabMap = {};
         let soundEnabled = true;
         let alertedBosses = new Set();
         let warned5MinBosses = new Set();
+        let webhookSent5Min = new Set();
+        let webhookSentAlive = new Set();
         let eventSource = null;
+
+        // Discord settings state
+        let discordConfig = {
+            url: '',
+            notifySet: true,
+            notify5Min: true,
+            notifySpawn: true,
+            mention: 'none'
+        };
+
+        function loadDiscordConfig() {
+            try {
+                const saved = localStorage.getItem(DISCORD_KEY);
+                if (saved) {
+                    discordConfig = { ...discordConfig, ...JSON.parse(saved) };
+                }
+            } catch (e) {}
+            updateWebhookButtonState();
+        }
+
+        function updateWebhookButtonState() {
+            const label = document.getElementById('webhook-btn-label');
+            if (label) {
+                if (discordConfig.url && discordConfig.url.trim().length > 0) {
+                    label.innerHTML = `Discord <span class="text-emerald-400 font-bold">• เปิดใช้</span>`;
+                } else {
+                    label.textContent = 'Discord Webhook';
+                }
+            }
+        }
+
+        async function sendToDiscordWebhook(payload) {
+            if (!discordConfig.url || !discordConfig.url.trim().startsWith('http')) return;
+            try {
+                await fetch(discordConfig.url.trim(), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } catch (e) {
+                console.warn("Discord Webhook Error:", e);
+            }
+        }
+
+        function getMentionText() {
+            if (discordConfig.mention === 'everyone') return '@everyone ';
+            if (discordConfig.mention === 'here') return '@here ';
+            return '';
+        }
+
+        function sendDiscordBossSet(boss, deathTime, spawnTime) {
+            if (!discordConfig.notifySet || !discordConfig.url) return;
+            const deathStr = formatTimeHM(new Date(deathTime));
+            const spawnStr = formatTimeHM(new Date(spawnTime));
+            
+            const payload = {
+                content: `${getMentionText()}⏱ **[ตั้งเวลานับถอยหลังบอส]**`,
+                embeds: [{
+                    title: `⚔️ ${boss.name} (Lv. ${boss.level})`,
+                    description: `เริ่มนับถอยหลัง **3 ชั่วโมง** แล้วโดย **${nickname || 'เพื่อนในตี้'}**`,
+                    color: 0x6366f1, // Indigo
+                    thumbnail: { url: boss.image },
+                    fields: [
+                        { name: "💀 เวลาที่ตาย", value: `\`${deathStr}\``, inline: true },
+                        { name: "🌟 เวลาเกิดใหม่", value: `\`${spawnStr}\``, inline: true },
+                        { name: "📍 ตำแหน่งถ้ำ", value: `${boss.cave} (${boss.entrance})`, inline: false }
+                    ],
+                    footer: { text: `ห้อง: ${currentRoomId} • Binder Town Boss Timer` },
+                    timestamp: new Date().toISOString()
+                }]
+            };
+            sendToDiscordWebhook(payload);
+        }
+
+        function sendDiscordBossWarning(boss, spawnTime) {
+            if (!discordConfig.notify5Min || !discordConfig.url) return;
+            const spawnStr = formatTimeHM(new Date(spawnTime));
+            
+            const payload = {
+                content: `${getMentionText()}⚠️ **[เตรียมตัว!] บอสจะเกิดในอีก 5 นาที**`,
+                embeds: [{
+                    title: `🔥 ${boss.name} (Lv. ${boss.level})`,
+                    description: `บอสกำลังจะเกิดในอีก **5 นาที** กรุณาวาร์ปไปเตรียมพร้อมที่หน้าถ้ำ!`,
+                    color: 0xf59e0b, // Amber
+                    thumbnail: { url: boss.image },
+                    fields: [
+                        { name: "⏰ เวลาเกิดโดยประมาณ", value: `\`${spawnStr}\``, inline: true },
+                        { name: "🚪 ทางเข้าถ้ำ", value: `${boss.entrance}`, inline: true },
+                        { name: "🗺️ ถ้ำ", value: `${boss.cave}`, inline: false }
+                    ],
+                    footer: { text: `ห้อง: ${currentRoomId} • Binder Town Boss Timer` },
+                    timestamp: new Date().toISOString()
+                }]
+            };
+            sendToDiscordWebhook(payload);
+        }
+
+        function sendDiscordBossAlive(boss) {
+            if (!discordConfig.notifySpawn || !discordConfig.url) return;
+            
+            const payload = {
+                content: `${getMentionText()}🚨 **[บอสเกิดแล้ว!] ALIVE NOW**`,
+                embeds: [{
+                    title: `👑 ${boss.name} (Lv. ${boss.level}) เกิดแล้ว!`,
+                    description: `**เกิดแล้วตอนนี้!** รีบเข้าไปตีบอสเลย ทุกคนที่ช่วยตี 45 วิแรกจะได้รับชุดของรางวัลทางจดหมาย`,
+                    color: 0x10b981, // Emerald Green
+                    thumbnail: { url: boss.image },
+                    fields: [
+                        { name: "📍 ถ้ำของบอส", value: `**${boss.cave}**`, inline: true },
+                        { name: "🗺️ ทางเข้าจากแมพ", value: `${boss.entrance}`, inline: true }
+                    ],
+                    footer: { text: `ห้อง: ${currentRoomId} • Binder Town Boss Timer` },
+                    timestamp: new Date().toISOString()
+                }]
+            };
+            sendToDiscordWebhook(payload);
+        }
 
         function pad2(n) { return String(n).padStart(2, '0'); }
 
@@ -514,8 +722,17 @@
             };
 
             bossStateMap[bossId] = entry;
+            webhookSent5Min.delete(bossId);
+            webhookSentAlive.delete(bossId);
+
             window.renderBosses();
             updateClockAndTimers();
+
+            // Send Discord set notification
+            if (deathTime && spawnTime) {
+                const boss = FIELD_BOSSES.find(b => b.id === bossId);
+                if (boss) sendDiscordBossSet(boss, deathTime, spawnTime);
+            }
 
             const topic = `${NTFY_PREFIX}${currentRoomId}`;
             fetch(`https://ntfy.sh/${topic}`, {
@@ -568,7 +785,6 @@
                 const deathDate = state?.deathTime ? new Date(state.deathTime) : null;
                 const spawnDate = state?.spawnTime ? new Date(state.spawnTime) : null;
                 const remainingMs = state?.spawnTime ? Math.max(0, state.spawnTime - now) : 0;
-                const tab = bossTabMap[boss.id] || 'death';
 
                 let cardClass = 'border-slate-800 bg-[#101726]';
                 let statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400 border border-slate-700">ยังไม่มีข้อมูล</span>';
@@ -664,43 +880,28 @@
                             <span>เพิ่งตาย (ตอนนี้) ➔ นับทันที 3 ชม.</span>
                         </button>
 
-                        <div class="bg-slate-950/70 p-1 rounded-xl border border-slate-800 flex gap-1 text-[11px]">
-                            <button onclick="window.switchTab('${boss.id}', 'death')" class="flex-1 py-1 rounded-lg text-center transition font-medium ${tab === 'death' ? 'bg-indigo-600/30 text-indigo-300 border border-indigo-500/40' : 'text-slate-400 hover:text-slate-200'}">
-                                กรอกเวลาที่ตาย
-                            </button>
-                            <button onclick="window.switchTab('${boss.id}', 'remain')" class="flex-1 py-1 rounded-lg text-center transition font-medium ${tab === 'remain' ? 'bg-indigo-600/30 text-indigo-300 border border-indigo-500/40' : 'text-slate-400 hover:text-slate-200'}">
-                                กรอกเวลาที่เหลือ
-                            </button>
+                        <!-- กรอกเวลาที่เหลือโดยตรง ไม่ต้องสลับแท็บ -->
+                        <div class="space-y-1 bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/70">
+                            <div class="flex items-center justify-between">
+                                <label class="text-[10px] text-amber-300 font-medium flex items-center gap-1">
+                                    <i data-lucide="timer" class="w-3 h-3 text-amber-400"></i>
+                                    <span>กรอกเวลาที่เหลือ (เข้าห้องตอนยังไม่เกิด):</span>
+                                </label>
+                            </div>
+                            <div class="flex items-center gap-1.5 pt-0.5">
+                                <div class="flex-1 flex items-center gap-1">
+                                    <input type="number" id="rem-hrs-${boss.id}" min="0" max="3" placeholder="0" class="w-full bg-slate-900 border border-slate-700 text-xs text-center text-slate-200 rounded-lg py-1.5 outline-none focus:border-indigo-500 font-mono">
+                                    <span class="text-[10px] text-slate-400">ชม.</span>
+                                </div>
+                                <div class="flex-1 flex items-center gap-1">
+                                    <input type="number" id="rem-mins-${boss.id}" min="0" max="59" placeholder="00" class="w-full bg-slate-900 border border-slate-700 text-xs text-center text-slate-200 rounded-lg py-1.5 outline-none focus:border-indigo-500 font-mono">
+                                    <span class="text-[10px] text-slate-400">น.</span>
+                                </div>
+                                <button onclick="window.setRemainingTime('${boss.id}')" class="px-3 py-1.5 bg-amber-600/30 hover:bg-amber-600/50 border border-amber-500/50 rounded-lg text-xs text-amber-200 font-semibold whitespace-nowrap transition active:scale-95">
+                                    เริ่มนับ
+                                </button>
+                            </div>
                         </div>
-
-                        ${tab === 'death' ? `
-                            <div class="space-y-1 bg-slate-900/60 p-2 rounded-xl border border-slate-800/70">
-                                <label class="text-[10px] text-slate-400 block">ระบุเวลาที่ตาย (เช่น 21:00):</label>
-                                <div class="flex items-center gap-1.5">
-                                    <input type="time" id="time-input-${boss.id}" step="60" class="flex-1 bg-slate-950 border border-slate-700 text-xs text-slate-200 rounded-lg px-2.5 py-1.5 outline-none focus:border-indigo-500">
-                                    <button onclick="window.setCustomDiedTime('${boss.id}')" class="px-2.5 py-1.5 bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 rounded-lg text-xs text-indigo-200 font-medium whitespace-nowrap transition">
-                                        คำนวณ (+3ชม.)
-                                    </button>
-                                </div>
-                            </div>
-                        ` : `
-                            <div class="space-y-1 bg-slate-900/60 p-2 rounded-xl border border-slate-800/70">
-                                <label class="text-[10px] text-amber-300/80 block">เวลาที่เหลือก่อนบอสเกิด:</label>
-                                <div class="flex items-center gap-1.5">
-                                    <div class="flex-1 flex items-center gap-1">
-                                        <input type="number" id="rem-hrs-${boss.id}" min="0" max="3" placeholder="0" class="w-full bg-slate-950 border border-slate-700 text-xs text-center text-slate-200 rounded-lg py-1.5 outline-none focus:border-indigo-500">
-                                        <span class="text-[10px] text-slate-400">ชม.</span>
-                                    </div>
-                                    <div class="flex-1 flex items-center gap-1">
-                                        <input type="number" id="rem-mins-${boss.id}" min="0" max="59" placeholder="00" class="w-full bg-slate-950 border border-slate-700 text-xs text-center text-slate-200 rounded-lg py-1.5 outline-none focus:border-indigo-500">
-                                        <span class="text-[10px] text-slate-400">น.</span>
-                                    </div>
-                                    <button onclick="window.setRemainingTime('${boss.id}')" class="px-2.5 py-1.5 bg-amber-600/30 hover:bg-amber-600/50 border border-amber-500/40 rounded-lg text-xs text-amber-200 font-medium whitespace-nowrap transition">
-                                        เริ่มนับ
-                                    </button>
-                                </div>
-                            </div>
-                        `}
 
                         <div class="flex items-center gap-2 pt-1">
                             <button onclick="window.copyBossSingle('${boss.id}')" class="flex-1 flex items-center justify-center gap-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-indigo-300 font-medium text-xs rounded-xl transition active:scale-95">
@@ -708,7 +909,7 @@
                                 <span>คัดลอกเวลา</span>
                             </button>
                             ${state?.spawnTime ? `
-                                <button onclick="window.resetBossAlive('${boss.id}')" class="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-rose-400 rounded-xl text-xs transition" title="รีเซ็ต">
+                                <button onclick="window.resetBossAlive('${boss.id}')" class="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-rose-400 rounded-xl text-xs transition" title="รีเซ็ตบอสตัวนี้">
                                     <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
                                 </button>
                             ` : ''}
@@ -723,11 +924,6 @@
             }
         };
 
-        window.switchTab = function(bossId, tab) {
-            bossTabMap[bossId] = tab;
-            window.renderBosses();
-        };
-
         window.setDiedNow = function(bossId) {
             const now = Date.now();
             const spawnTime = now + COOLDOWN_MS;
@@ -739,103 +935,189 @@
             showToast(`เริ่มนับถอยหลัง ${boss?.name || ''} ทันที (3 ชม.)`, "check-circle");
         };
 
-        window.setCustomDiedTime = function(bossId) {
-            const input = document.getElementById(`time-input-${bossId}`);
-            if (!input || !input.value) {
-                showToast("กรุณาระบุเวลาที่บอสตาย", "alert-circle");
-                return;
-            }
-            const [hours, minutes] = input.value.split(':').map(Number);
-            const now = new Date();
-            const deathDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
-
-            if (deathDate.getTime() > now.getTime()) {
-                deathDate.setDate(deathDate.getDate() - 1);
-            }
-
-            const deathTime = deathDate.getTime();
-            const spawnTime = deathTime + COOLDOWN_MS;
-            alertedBosses.delete(bossId);
-            warned5MinBosses.delete(bossId);
-
-            const boss = FIELD_BOSSES.find(b => b.id === bossId);
-            broadcastBossUpdate(bossId, deathTime, spawnTime);
-            showToast(`ตั้งเวลาตาย ${boss?.name || ''}: ${pad2(hours)}:${pad2(minutes)} แล้ว`, "check");
-        };
-
         window.setRemainingTime = function(bossId) {
-            const hrs = parseInt(document.getElementById(`rem-hrs-${bossId}`)?.value || '0', 10);
-            const mins = parseInt(document.getElementById(`rem-mins-${bossId}`)?.value || '0', 10);
-
-            if (isNaN(hrs) && isNaN(mins)) {
-                showToast("กรุณากรอกเวลาที่เหลืออย่างน้อย 1 ช่อง", "alert-circle");
-                return;
-            }
+            const hrsInput = document.getElementById(`rem-hrs-${bossId}`);
+            const minsInput = document.getElementById(`rem-mins-${bossId}`);
+            const hrs = parseInt(hrsInput?.value || '0', 10);
+            const mins = parseInt(minsInput?.value || '0', 10);
 
             const remMs = ((hrs * 60) + mins) * 60 * 1000;
             if (remMs <= 0) {
-                showToast("เวลาที่เหลือต้องมากกว่า 0 นาที", "alert-circle");
+                showToast("กรุณากรอกเวลาที่เหลือให้มากกว่า 0 นาที", "alert-circle");
                 return;
             }
 
             const now = Date.now();
             const spawnTime = now + remMs;
-            const deathTime = spawnTime - COOLDOWN_MS;
+            const calculatedDeathTime = spawnTime - COOLDOWN_MS;
 
             alertedBosses.delete(bossId);
             warned5MinBosses.delete(bossId);
 
             const boss = FIELD_BOSSES.find(b => b.id === bossId);
-            broadcastBossUpdate(bossId, deathTime, spawnTime);
-            showToast(`บันทึกเวลาเหลือ ${boss?.name || ''}: ${hrs}ชม. ${mins}น. แล้ว`, "check-circle");
+            broadcastBossUpdate(bossId, calculatedDeathTime, spawnTime);
+            showToast(`เริ่มนับถอยหลัง ${boss?.name || ''} ตามเวลาที่เหลือ`, "check-circle");
         };
 
         window.resetBossAlive = function(bossId) {
-            const boss = FIELD_BOSSES.find(b => b.id === bossId);
-            broadcastBossUpdate(bossId, null, null);
+            delete bossStateMap[bossId];
             alertedBosses.delete(bossId);
             warned5MinBosses.delete(bossId);
-            showToast(`รีเซ็ต ${boss?.name || ''} เรียบร้อย`, "rotate-ccw");
+            webhookSent5Min.delete(bossId);
+            webhookSentAlive.delete(bossId);
+
+            window.renderBosses();
+            updateClockAndTimers();
+
+            const topic = `${NTFY_PREFIX}${currentRoomId}`;
+            fetch(`https://ntfy.sh/${topic}`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    type: 'SYNC',
+                    roomId: currentRoomId,
+                    bosses: bossStateMap,
+                    timestamp: Date.now()
+                }),
+                headers: { 'Title': 'Binder Boss Reset Single' }
+            }).catch(e => console.warn(e));
+
+            showToast("รีเซ็ตสถานะบอสเรียบร้อย", "rotate-ccw");
         };
 
-        window.switchRoom = function(newRoom) {
-            if (!newRoom || !newRoom.trim()) return;
-            const clean = newRoom.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 30);
-            if (!clean) return;
+        window.handleShareRoom = function() {
+            const modal = document.getElementById('share-modal');
+            const urlInput = document.getElementById('share-url-input');
+            const roomBadge = document.getElementById('share-room-code-badge');
 
-            currentRoomId = clean;
+            if (roomBadge) roomBadge.textContent = currentRoomId;
+
+            let shareUrl = window.location.href;
+            try {
+                const u = new URL(window.location.href);
+                u.searchParams.set('room', currentRoomId);
+                shareUrl = u.toString();
+            } catch (e) {}
+
+            if (urlInput) urlInput.value = shareUrl;
+            if (modal) modal.classList.remove('opacity-0', 'pointer-events-none');
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            }
+        };
+
+        window.switchRoom = function(newRoomId) {
+            if (!newRoomId) return;
+            const cleaned = newRoomId.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 30);
+            if (!cleaned) return;
+
+            currentRoomId = cleaned;
             setRoomURL(currentRoomId);
             bossStateMap = {};
             alertedBosses.clear();
             warned5MinBosses.clear();
-            initRealtimeSync(currentRoomId);
+            webhookSent5Min.clear();
+            webhookSentAlive.clear();
+
             window.renderBosses();
-            showToast(`เข้าห้อง [${currentRoomId}] เรียบร้อย`, "door-open");
+            initRealtimeSync(currentRoomId);
+            showToast(`เปลี่ยนไปยังห้อง [${currentRoomId}] แล้ว`, "door-open");
         };
 
-        function getShareableURL() {
-            try {
-                const u = new URL(window.location.href);
-                u.searchParams.set('room', currentRoomId);
-                return u.toString();
-            } catch (e) {}
-            return `${window.location.origin}${window.location.pathname}?room=${currentRoomId}`;
-        }
+        window.openDiscordModal = function() {
+            const urlInput = document.getElementById('discord-webhook-url');
+            const setCheck = document.getElementById('webhook-notify-set');
+            const minCheck = document.getElementById('webhook-notify-5min');
+            const spawnCheck = document.getElementById('webhook-notify-spawn');
+            const mentionSel = document.getElementById('webhook-mention');
 
-        window.handleShareRoom = function() {
-            const shareUrl = getShareableURL();
-            const inputEl = document.getElementById('share-url-input');
-            const codeEl = document.getElementById('modal-room-code-display');
+            if (urlInput) urlInput.value = discordConfig.url || '';
+            if (setCheck) setCheck.checked = discordConfig.notifySet !== false;
+            if (minCheck) minCheck.checked = discordConfig.notify5Min !== false;
+            if (spawnCheck) spawnCheck.checked = discordConfig.notifySpawn !== false;
+            if (mentionSel) mentionSel.value = discordConfig.mention || 'none';
 
-            if (inputEl) inputEl.value = shareUrl;
-            if (codeEl) codeEl.textContent = currentRoomId;
-
-            const modal = document.getElementById('share-modal');
-            if (modal) {
-                modal.classList.remove('opacity-0', 'pointer-events-none');
-            }
+            const modal = document.getElementById('discord-modal');
+            if (modal) modal.classList.remove('opacity-0', 'pointer-events-none');
             if (window.lucide && typeof window.lucide.createIcons === 'function') {
                 window.lucide.createIcons();
+            }
+        };
+
+        window.closeDiscordModal = function() {
+            const modal = document.getElementById('discord-modal');
+            if (modal) modal.classList.add('opacity-0', 'pointer-events-none');
+        };
+
+        window.saveDiscordWebhook = function() {
+            const urlInput = document.getElementById('discord-webhook-url');
+            const setCheck = document.getElementById('webhook-notify-set');
+            const minCheck = document.getElementById('webhook-notify-5min');
+            const spawnCheck = document.getElementById('webhook-notify-spawn');
+            const mentionSel = document.getElementById('webhook-mention');
+
+            discordConfig = {
+                url: urlInput ? urlInput.value.trim() : '',
+                notifySet: setCheck ? setCheck.checked : true,
+                notify5Min: minCheck ? minCheck.checked : true,
+                notifySpawn: spawnCheck ? spawnCheck.checked : true,
+                mention: mentionSel ? mentionSel.value : 'none'
+            };
+
+            localStorage.setItem(DISCORD_KEY, JSON.stringify(discordConfig));
+            updateWebhookButtonState();
+            window.closeDiscordModal();
+            showToast("บันทึกการตั้งค่า Discord Webhook เรียบร้อย!", "check-circle");
+        };
+
+        window.clearDiscordWebhook = function() {
+            discordConfig = {
+                url: '',
+                notifySet: true,
+                notify5Min: true,
+                notifySpawn: true,
+                mention: 'none'
+            };
+            localStorage.removeItem(DISCORD_KEY);
+            const urlInput = document.getElementById('discord-webhook-url');
+            if (urlInput) urlInput.value = '';
+            updateWebhookButtonState();
+            window.closeDiscordModal();
+            showToast("ลบ Webhook เรียบร้อยแล้ว", "trash-2");
+        };
+
+        window.testDiscordWebhook = async function() {
+            const urlInput = document.getElementById('discord-webhook-url');
+            const testUrl = urlInput ? urlInput.value.trim() : discordConfig.url;
+
+            if (!testUrl || !testUrl.startsWith('http')) {
+                showToast("กรุณากรอก Discord Webhook URL ให้ถูกต้องก่อนทดสอบ", "alert-circle");
+                return;
+            }
+
+            try {
+                showToast("กำลังส่งข้อความทดสอบ...", "send");
+                const res = await fetch(testUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: `🔔 **[ทดสอบการเชื่อมต่อ Binder Town Boss Timer]**\nการเชื่อมต่อ Webhook สำเร็จเรียบร้อย! ระบบพร้อมแจ้งเตือนเวลาบอสเข้าห้องนี้แล้ว ✅`,
+                        embeds: [{
+                            title: "ทดสอบการแจ้งเตือนบอส",
+                            description: "หากเห็นข้อความนี้ แสดงว่า Discord จะส่งเสียงแจ้งเตือนเมื่อบอสใกล้เกิดและเมื่อบอสเกิดทันที",
+                            color: 0x5865F2,
+                            footer: { text: "Binder Town Field Boss Timer" },
+                            timestamp: new Date().toISOString()
+                        }]
+                    })
+                });
+
+                if (res.ok || res.status === 204) {
+                    showToast("ส่งข้อความทดสอบเข้า Discord สำเร็จแล้ว!", "check");
+                } else {
+                    showToast("ไม่สามารถส่งได้ ตรวจสอบ URL อีกครั้ง (Error " + res.status + ")", "alert-circle");
+                }
+            } catch (err) {
+                showToast("เกิดข้อผิดพลาดในการเชื่อมต่อ Discord", "alert-triangle");
             }
         };
 
@@ -1077,6 +1359,12 @@
                     warned5MinBosses.add(boss.id);
                     playWarningChime();
                     showToast(`⚠️ [${boss.name}] จะเกิดในอีก 5 นาที!`, "bell-ring");
+
+                    // Send Discord 5-min warning
+                    if (!webhookSent5Min.has(boss.id)) {
+                        webhookSent5Min.add(boss.id);
+                        sendDiscordBossWarning(boss, state.spawnTime);
+                    }
                 }
 
                 if (diff <= 0 && !alertedBosses.has(boss.id)) {
@@ -1084,13 +1372,11 @@
                     playSpawnChime();
                     showToast(`⚔️ [${boss.name}] เกิดแล้ว!`, "swords");
                     needReRender = true;
-                }
 
-                if (cdEl) {
-                    if (diff <= 0) {
-                        cdEl.textContent = "เกิดแล้ว!";
-                    } else {
-                        cdEl.textContent = formatDuration(diff);
+                    // Send Discord Alive notification
+                    if (!webhookSentAlive.has(boss.id)) {
+                        webhookSentAlive.add(boss.id);
+                        sendDiscordBossAlive(boss);
                     }
                 }
             });
@@ -1103,6 +1389,8 @@
         window.addEventListener('DOMContentLoaded', () => {
             currentRoomId = parseRoomFromURL();
             setRoomURL(currentRoomId);
+
+            loadDiscordConfig();
 
             const savedSound = localStorage.getItem(SOUND_KEY);
             if (savedSound !== null) soundEnabled = savedSound === 'true';
