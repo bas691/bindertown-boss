@@ -13,9 +13,9 @@
                 extend: {
                     colors: {
                         game: {
-                            bg: '#090d16',
-                            card: '#111827',
-                            border: '#1f293d',
+                            bg: '#070b12',
+                            card: '#0c1322',
+                            cardBorder: '#1a263d',
                             accent: '#6366f1',
                             gold: '#fbbf24'
                         }
@@ -32,7 +32,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body {
-            background-color: #090d16;
+            background-color: #070b12;
             color: #f1f5f9;
             margin: 0;
             padding: 0;
@@ -40,63 +40,74 @@
             min-height: 100vh;
         }
         @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
-            50% { box-shadow: 0 0 25px rgba(16, 185, 129, 0.85); }
+            0%, 100% { 
+                box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.9), 0 0 24px rgba(16, 185, 129, 0.45); 
+                border-color: #10b981;
+            }
+            50% { 
+                box-shadow: 0 0 0 2px rgba(16, 185, 129, 1), 0 0 34px rgba(16, 185, 129, 0.85); 
+                border-color: #34d399;
+            }
         }
         .boss-alive-glow {
             animation: pulse-glow 2s infinite ease-in-out;
             border-color: #10b981 !important;
         }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #070b12; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
     </style>
 </head>
-<body class="bg-[#090d16] text-slate-100 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
+<body class="bg-[#070b12] text-slate-100 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
 
     <!-- Top Sticky Header -->
-    <header class="sticky top-0 z-40 bg-[#0c121e]/90 backdrop-blur-md border-b border-slate-800/80 px-4 py-3 shadow-xl">
-        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+    <header class="sticky top-0 z-40 bg-[#090f1a]/95 backdrop-blur-md border-b border-slate-800/80 px-4 py-2.5 shadow-xl">
+        <div class="max-w-[1560px] mx-auto flex flex-wrap items-center justify-between gap-3">
             
             <!-- Logo & Title -->
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 p-0.5 shadow-lg shadow-indigo-500/20 flex items-center justify-center">
-                    <div class="w-full h-full bg-[#0d1424] rounded-[10px] flex items-center justify-center">
-                        <i data-lucide="swords" class="w-5 h-5 text-indigo-400"></i>
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 p-0.5 shadow-lg shadow-indigo-500/20 flex items-center justify-center">
+                    <div class="w-full h-full bg-[#0a101d] rounded-[10px] flex items-center justify-center">
+                        <i data-lucide="swords" class="w-4 h-4 text-indigo-400"></i>
                     </div>
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
-                        <h1 class="font-bold text-base sm:text-lg tracking-wide text-slate-100">
+                        <h1 class="font-bold text-sm sm:text-base tracking-wide text-slate-100">
                             Binder Town <span class="text-indigo-400 font-normal">Field Boss</span>
                         </h1>
-                        <span class="px-2 py-0.5 text-[10px] font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 rounded-md">
+                        <span class="px-2 py-0.5 text-[10px] font-semibold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 rounded-md">
                             เกิดทุก 3 ชม.
                         </span>
                     </div>
-                    <div class="flex items-center gap-2 text-xs text-slate-400">
-                        <span id="sync-status-badge" class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] bg-slate-800 text-slate-400 border border-slate-700">
+                    <div class="flex items-center gap-2 text-[11px] text-slate-400">
+                        <span id="sync-status-badge" class="inline-flex items-center gap-1.5 px-2 py-0.2 rounded-full text-[10px] bg-slate-800/90 text-slate-400 border border-slate-700">
                             <span class="w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse"></span> กำลังเชื่อมต่อ...
                         </span>
-                        <span class="text-slate-500">•</span>
+                        <span class="text-slate-600">•</span>
                         <span>ห้อง: <b id="room-display-name" class="text-indigo-300 font-mono">party-1</b></span>
                     </div>
                 </div>
             </div>
 
             <!-- Current Real Clock & Main Controls -->
-            <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div class="flex flex-wrap items-center gap-2">
                 <!-- Clock Box -->
-                <div class="hidden sm:flex flex-col items-end px-3 py-1 bg-slate-900/80 border border-slate-800 rounded-xl">
-                    <span class="text-[10px] text-slate-400 uppercase tracking-widest font-mono">เวลาปัจจุบัน</span>
+                <div class="flex flex-col items-center px-3 py-1 bg-[#0c1424] border border-slate-800 rounded-xl">
+                    <span class="text-[9px] text-slate-400 uppercase tracking-widest font-mono">เวลาปัจจุบัน</span>
                     <span id="current-clock" class="text-sm font-bold font-mono text-amber-300">--:--:--</span>
                 </div>
 
                 <!-- Room Actions -->
-                <button onclick="window.handleShareRoom()" class="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 border border-indigo-500/50 rounded-xl text-xs font-semibold transition active:scale-95">
+                <button onclick="window.handleShareRoom()" class="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600/25 hover:bg-indigo-600/40 text-indigo-300 border border-indigo-500/40 rounded-xl text-xs font-semibold transition active:scale-95">
                     <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
-                    <span>แชร์ห้อง / ลิงก์</span>
+                    <span>แชร์ห้อง</span>
                 </button>
 
                 <!-- Discord Webhook Button -->
-                <button onclick="window.openDiscordModal()" class="flex items-center gap-1.5 px-3 py-1.5 bg-[#5865F2]/20 hover:bg-[#5865F2]/40 text-[#8ea1e1] border border-[#5865F2]/50 rounded-xl text-xs font-semibold transition active:scale-95">
+                <button onclick="window.openDiscordModal()" class="flex items-center gap-1.5 px-3 py-1.5 bg-[#5865F2]/20 hover:bg-[#5865F2]/35 text-[#8ea1e1] border border-[#5865F2]/50 rounded-xl text-xs font-semibold transition active:scale-95">
                     <i data-lucide="bell" class="w-3.5 h-3.5 text-[#5865F2]"></i>
                     <span id="webhook-btn-label">Discord Webhook</span>
                 </button>
@@ -116,13 +127,13 @@
     </header>
 
     <!-- Sub-bar: Nickname, Filter & Summary Export -->
-    <div class="bg-[#0b101b] border-b border-slate-800/80 px-4 py-2.5">
-        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
+    <div class="bg-[#090e1a] border-b border-slate-800/80 px-4 py-2">
+        <div class="max-w-[1560px] mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
             
             <!-- Nickname configuration -->
             <div class="flex items-center gap-2">
-                <span class="text-slate-400 hidden sm:inline">ชื่อในปาร์ตี้:</span>
-                <div class="flex items-center bg-slate-900 border border-slate-700 rounded-lg overflow-hidden focus-within:border-indigo-500">
+                <span class="text-slate-400">ชื่อในปาร์ตี้:</span>
+                <div class="flex items-center bg-[#0c1424] border border-slate-700 rounded-lg overflow-hidden focus-within:border-indigo-500">
                     <input type="text" id="nickname-input" placeholder="ใส่ชื่อคุณ..." maxlength="15" class="bg-transparent px-2.5 py-1 text-xs text-slate-200 outline-none w-28 sm:w-36">
                     <button onclick="window.saveNickname()" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-indigo-400 border-l border-slate-700 transition" title="บันทึกชื่อ">
                         <i data-lucide="check" class="w-3.5 h-3.5"></i>
@@ -133,7 +144,7 @@
             <!-- Filters & Bulk Action -->
             <div class="flex items-center gap-2 flex-wrap">
                 <!-- Status Filter -->
-                <select id="status-filter" onchange="window.renderBosses()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-slate-300 outline-none focus:border-indigo-500 text-xs">
+                <select id="status-filter" onchange="window.renderBosses()" class="bg-[#0c1424] border border-slate-700 rounded-lg px-2.5 py-1 text-slate-300 outline-none focus:border-indigo-500 text-xs">
                     <option value="all">แสดงบอสทั้งหมด (8 ตัว)</option>
                     <option value="alive">เกิดแล้ว (ALIVE)</option>
                     <option value="soon">ใกล้เกิด (&lt; 15 นาที)</option>
@@ -142,7 +153,7 @@
 
                 <!-- Search -->
                 <div class="relative">
-                    <input type="text" id="search-input" oninput="window.renderBosses()" placeholder="ค้นหาชื่อบอส, ถ้ำ..." class="bg-slate-900 border border-slate-700 rounded-lg pl-7 pr-2.5 py-1 text-xs text-slate-200 outline-none focus:border-indigo-500 w-32 sm:w-44">
+                    <input type="text" id="search-input" oninput="window.renderBosses()" placeholder="ค้นหาชื่อบอส, ถ้ำ..." class="bg-[#0c1424] border border-slate-700 rounded-lg pl-7 pr-2.5 py-1 text-xs text-slate-200 outline-none focus:border-indigo-500 w-36 sm:w-48">
                     <i data-lucide="search" class="w-3.5 h-3.5 text-slate-500 absolute left-2 top-2"></i>
                 </div>
 
@@ -160,10 +171,9 @@
         </div>
     </div>
 
-    <!-- Main Content Area -->
-    <main class="max-w-7xl mx-auto w-full p-4 sm:p-6 flex-1">
-        <!-- Field Bosses Grid (8 Bosses) -->
-        <div id="boss-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Main Content Area: 4-Column Grid exactly like screenshot -->
+    <main class="max-w-[1560px] mx-auto w-full p-4 sm:p-5 flex-1">
+        <div id="boss-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5">
             <!-- Dynamic Cards Loaded via JS -->
         </div>
 
@@ -175,7 +185,7 @@
     </main>
 
     <!-- Footer info -->
-    <footer class="mt-auto border-t border-slate-800/80 bg-[#0a0f1a] py-4 text-center text-xs text-slate-500">
+    <footer class="mt-auto border-t border-slate-800/80 bg-[#070b12] py-3 text-center text-xs text-slate-500">
         <p>ข้อมูลอิงตาม <a href="https://wiki.bindertowngame.com/systems/bosses" target="_blank" rel="noopener" class="text-indigo-400 hover:underline">Wiki Binder Town</a> • Field Boss เกิดใหม่ 3 ชม. หลังตาย</p>
     </footer>
 
@@ -195,7 +205,7 @@
                     </div>
                     <div>
                         <h3 class="text-sm font-bold text-slate-100">แชร์การนับเวลากับเพื่อนในปาร์ตี้</h3>
-                        <p class="text-[11px] text-slate-400">วิธีแชร์เวลาให้เพื่อนเห็น Realtime พร้อมกัน</p>
+                        <p class="text-[11px] text-slate-400">ทุกคนจะเห็นเวลานับถอยหลังตรงกันแบบ Realtime</p>
                     </div>
                 </div>
                 <button onclick="window.closeShareModal()" class="text-slate-400 hover:text-slate-200 p-1">
@@ -203,7 +213,6 @@
                 </button>
             </div>
 
-            <!-- Share Content -->
             <div class="space-y-3">
                 <div>
                     <label class="text-xs text-slate-400 block mb-1">ลิงก์ห้องสำหรับแชร์ให้เพื่อน:</label>
@@ -224,9 +233,6 @@
                             <i data-lucide="copy" class="w-3 h-3"></i>
                         </button>
                     </div>
-                    <p class="text-[11px] text-slate-500 leading-relaxed">
-                        เพื่อนที่เปิดผ่านลิงก์นี้จะเข้ามาอยู่ในห้องเดียวกันทันที เมื่อใครคนหนึ่งกดบันทึกเวลาบอส ทุกคนจะเห็นเวลานับถอยหลังตรงกันแบบ Realtime
-                    </p>
                 </div>
             </div>
 
@@ -251,7 +257,7 @@
                             ตั้งค่า Discord Webhook
                             <span class="px-2 py-0.5 rounded-full text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">แจ้งเตือนเข้าดิส</span>
                         </h3>
-                        <p class="text-[11px] text-slate-400">ส่งการแจ้งเตือนเมื่อบอสถูกบันทึก, เตือนก่อนเกิด 5 นาที และเมื่อบอสเกิด</p>
+                        <p class="text-[11px] text-slate-400">ส่งการแจ้งเตือนเมื่อบอสถูกบันทึก, เตือนล่วงหน้า 5, 3, 1 นาที และเมื่อเกิด</p>
                     </div>
                 </div>
                 <button onclick="window.closeDiscordModal()" class="text-slate-400 hover:text-slate-200 p-1">
@@ -265,14 +271,11 @@
                     Discord Webhook URL:
                 </label>
                 <input type="url" id="discord-webhook-url" placeholder="https://discord.com/api/webhooks/..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 font-mono focus:outline-none focus:border-[#5865F2]">
-                <p class="text-[11px] text-slate-500">
-                    *วิธีเอา Webhook: ใน Discord คลิกขวาห้องแชท > Edit Channel > Integrations > Webhooks > New Webhook > Copy Webhook URL
-                </p>
             </div>
 
             <!-- Notification Options -->
-            <div class="bg-slate-950/70 border border-slate-800 p-3.5 rounded-xl space-y-3 text-xs">
-                <div class="font-semibold text-slate-200">ตัวเลือกการแจ้งเตือน:</div>
+            <div class="bg-slate-950/70 border border-slate-800 p-3.5 rounded-xl space-y-2.5 text-xs">
+                <div class="font-semibold text-slate-200 mb-1">ตัวเลือกการแจ้งเตือน:</div>
                 
                 <label class="flex items-center gap-2.5 cursor-pointer text-slate-300">
                     <input type="checkbox" id="webhook-notify-set" checked class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-[#5865F2] focus:ring-0">
@@ -281,7 +284,17 @@
 
                 <label class="flex items-center gap-2.5 cursor-pointer text-slate-300">
                     <input type="checkbox" id="webhook-notify-5min" checked class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-[#5865F2] focus:ring-0">
-                    <span>แจ้งเตือนล่วงหน้า <b>5 นาที</b> ก่อนบอสเกิด (เตรียมวาร์ป)</span>
+                    <span>แจ้งเตือนล่วงหน้า <b>5 นาที</b> ก่อนบอสเกิด</span>
+                </label>
+
+                <label class="flex items-center gap-2.5 cursor-pointer text-slate-300">
+                    <input type="checkbox" id="webhook-notify-3min" checked class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-[#5865F2] focus:ring-0">
+                    <span>แจ้งเตือนล่วงหน้า <b>3 นาที</b> ก่อนบอสเกิด</span>
+                </label>
+
+                <label class="flex items-center gap-2.5 cursor-pointer text-slate-300">
+                    <input type="checkbox" id="webhook-notify-1min" checked class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-[#5865F2] focus:ring-0">
+                    <span>แจ้งเตือนล่วงหน้า <b>1 นาที</b> ก่อนบอสเกิด (เตรียมหน้าถ้ำ)</span>
                 </label>
 
                 <label class="flex items-center gap-2.5 cursor-pointer text-slate-300">
@@ -336,7 +349,7 @@
 
     <!-- Logic Script -->
     <script>
-        // ข้อมูลบอส 8 ตัวจาก Binder Town Wiki
+        // ข้อมูลบอส 8 ตัว เรียงตามลำดับ Level ตรงตามรูปภาพ
         const FIELD_BOSSES = [
             {
                 id: 'bloom_stag',
@@ -406,36 +419,37 @@
 
         const COOLDOWN_HOURS = 3;
         const COOLDOWN_MS = COOLDOWN_HOURS * 60 * 60 * 1000;
-        const SOUND_KEY = 'binder_sound_pref_v4';
-        const NICK_KEY = 'binder_nick_pref_v4';
-        const DISCORD_KEY = 'binder_discord_webhook_v1';
+        const SOUND_KEY = 'binder_sound_pref_v5';
+        const NICK_KEY = 'binder_nick_pref_v5';
+        const DISCORD_KEY = 'binder_discord_webhook_v2';
         const NTFY_PREFIX = 'bindertown_party_';
+        const LOCAL_STATE_KEY = 'binder_boss_state_v5';
 
-        // ป้องกันเวลาเก่าค้าง: ถ้าเวลาเกิดผ่านไปเกิน 10 นาทีแล้ว จะไม่ส่งเตือน ALIVE ย้อนหลัง
         const ALIVE_WEBHOOK_WINDOW_MS = 10 * 60 * 1000;
 
         let currentRoomId = 'party-1';
         let nickname = localStorage.getItem(NICK_KEY) || 'เพื่อนในปาร์ตี้';
         let bossStateMap = {};
         let soundEnabled = true;
+
+        // Sets to prevent duplicate triggers
         let alertedBosses = new Set();
         let warned5MinBosses = new Set();
-        let webhookSent5Min = new Set();
-        let webhookSentAlive = new Set();
-        let eventSource = null;
+        let warned3MinBosses = new Set();
+        let warned1MinBosses = new Set();
 
-        // Key สำหรับจำสถานะในเครื่อง
-        const LOCAL_STATE_KEY = 'binder_boss_state_v4';
+        let webhookSent5Min = new Set();
+        let webhookSent3Min = new Set();
+        let webhookSent1Min = new Set();
+        let webhookSentAlive = new Set();
+
+        let eventSource = null;
 
         function loadLocalState() {
             try {
                 const saved = localStorage.getItem(LOCAL_STATE_KEY);
-                if (saved) {
-                    bossStateMap = JSON.parse(saved);
-                }
-            } catch (e) {
-                bossStateMap = {};
-            }
+                if (saved) bossStateMap = JSON.parse(saved);
+            } catch (e) { bossStateMap = {}; }
         }
 
         function saveLocalState() {
@@ -444,11 +458,12 @@
             } catch (e) {}
         }
 
-        // Discord settings state
         let discordConfig = {
             url: '',
             notifySet: true,
             notify5Min: true,
+            notify3Min: true,
+            notify1Min: true,
             notifySpawn: true,
             mention: 'none'
         };
@@ -461,12 +476,16 @@
                     const urlInput = document.getElementById('discord-webhook-url');
                     const notifySet = document.getElementById('webhook-notify-set');
                     const notify5Min = document.getElementById('webhook-notify-5min');
+                    const notify3Min = document.getElementById('webhook-notify-3min');
+                    const notify1Min = document.getElementById('webhook-notify-1min');
                     const notifySpawn = document.getElementById('webhook-notify-spawn');
                     const mention = document.getElementById('webhook-mention');
 
                     if (urlInput) urlInput.value = discordConfig.url || '';
                     if (notifySet) notifySet.checked = discordConfig.notifySet !== false;
                     if (notify5Min) notify5Min.checked = discordConfig.notify5Min !== false;
+                    if (notify3Min) notify3Min.checked = discordConfig.notify3Min !== false;
+                    if (notify1Min) notify1Min.checked = discordConfig.notify1Min !== false;
                     if (notifySpawn) notifySpawn.checked = discordConfig.notifySpawn !== false;
                     if (mention) mention.value = discordConfig.mention || 'none';
                 }
@@ -478,36 +497,28 @@
             const label = document.getElementById('webhook-btn-label');
             if (label) {
                 if (discordConfig.url && discordConfig.url.trim().length > 0) {
-                    label.innerHTML = `Discord <span class="text-emerald-400 font-bold">• เชื่อมต่อแล้ว</span>`;
+                    label.innerHTML = `Discord <span class="text-emerald-400 font-bold">• ต่อแล้ว</span>`;
                 } else {
                     label.textContent = 'Discord Webhook';
                 }
             }
         }
 
-        // ระบบส่ง Discord Webhook แบบทนทาน (มี Fallback แก้ปัญหา Browser CORS)
         async function sendToDiscordWebhook(payload) {
             if (!discordConfig.url || !discordConfig.url.trim().startsWith('http')) {
                 return { success: false, error: 'กรุณากรอก Discord Webhook URL' };
             }
-
             const rawUrl = discordConfig.url.trim();
 
-            // วิธีที่ 1: ยิงตรงหา Discord
             try {
                 const response = await fetch(rawUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                if (response.ok || response.status === 204) {
-                    return { success: true };
-                }
-            } catch (directErr) {
-                // หากยิงตรงไม่ผ่านเนื่องจากติด CORS จากเบราว์เซอร์ ให้สำรองด้วยวิธีที่ 2
-            }
+                if (response.ok || response.status === 204) return { success: true };
+            } catch (e) {}
 
-            // วิธีที่ 2: ใช้ Public CORS Proxy ที่ปลอดภัยเพื่อส่งเข้า Discord
             try {
                 const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(rawUrl);
                 const proxyRes = await fetch(proxyUrl, {
@@ -515,20 +526,10 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                if (proxyRes.ok || proxyRes.status === 204) {
-                    return { success: true };
-                }
-            } catch (proxyErr) {}
+                if (proxyRes.ok || proxyRes.status === 204) return { success: true };
+            } catch (e) {}
 
-            // วิธีที่ 3: Beacon API เป็นด่านสุดท้าย
-            try {
-                const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-                if (navigator.sendBeacon(rawUrl, blob)) {
-                    return { success: true };
-                }
-            } catch (beaconErr) {}
-
-            return { success: false, error: 'เบราว์เซอร์บล็อกการส่งไปยัง Discord กรุณาตรวจสอบลิงก์ Webhook' };
+            return { success: false, error: 'ไม่สามารถส่ง Webhook ได้' };
         }
 
         function safeSendDiscord(payload) {
@@ -553,6 +554,8 @@
             const urlInput = document.getElementById('discord-webhook-url');
             const notifySet = document.getElementById('webhook-notify-set');
             const notify5Min = document.getElementById('webhook-notify-5min');
+            const notify3Min = document.getElementById('webhook-notify-3min');
+            const notify1Min = document.getElementById('webhook-notify-1min');
             const notifySpawn = document.getElementById('webhook-notify-spawn');
             const mention = document.getElementById('webhook-mention');
 
@@ -566,6 +569,8 @@
                 url: val,
                 notifySet: notifySet ? notifySet.checked : true,
                 notify5Min: notify5Min ? notify5Min.checked : true,
+                notify3Min: notify3Min ? notify3Min.checked : true,
+                notify1Min: notify1Min ? notify1Min.checked : true,
                 notifySpawn: notifySpawn ? notifySpawn.checked : true,
                 mention: mention ? mention.value : 'none'
             };
@@ -597,8 +602,6 @@
             }
 
             showToast("กำลังส่งข้อความทดสอบ...", "loader");
-
-            // อัปเดต URL ชั่วคราวสำหรับการทดสอบ
             discordConfig.url = url;
             discordConfig.mention = mention;
 
@@ -610,11 +613,11 @@
                 content: `${mentionPrefix}🔔 **[ทดสอบการเชื่อมต่อ Binder Town Webhook]**`,
                 embeds: [{
                     title: "⚔️ เชื่อมต่อสำเร็จ!",
-                    description: "ระบบจับเวลาบอส Binder Town เชื่อมต่อกับห้อง Discord นี้เรียบร้อยแล้ว เมื่อบอสตาย ใกล้เกิด หรือเกิดแล้ว จะมีการแจ้งเตือนส่งมาที่ห้องนี้",
+                    description: "ระบบจับเวลาบอส Binder Town พร้อมส่งการแจ้งเตือนแล้ว!",
                     color: 0x5865F2,
                     fields: [
                         { name: "สถานะ", value: "✅ Online", inline: true },
-                        { name: "ห้องซิงค์", value: `\`${currentRoomId}\``, inline: true }
+                        { name: "ห้อง", value: `\`${currentRoomId}\``, inline: true }
                     ],
                     footer: { text: "Binder Town Field Boss Timer" },
                     timestamp: new Date().toISOString()
@@ -641,7 +644,7 @@
             const spawnStr = formatTimeHM(new Date(spawnTime));
             
             const payload = {
-                content: `${getMentionText()}⏱ **[ตั้งเวลานับถอยหลังบอส]**`,
+                content: `${getMentionText()}⏱ **[เริ่มนับเวลาบอส]**`,
                 embeds: [{
                     title: `⚔️ ${boss.name} (Lv. ${boss.level})`,
                     description: `เริ่มนับถอยหลัง **3 ชั่วโมง** แล้วโดย **${nickname || 'เพื่อนในตี้'}**`,
@@ -650,7 +653,7 @@
                     fields: [
                         { name: "💀 เวลาที่ตาย", value: `\`${deathStr}\``, inline: true },
                         { name: "🌟 เวลาเกิดใหม่", value: `\`${spawnStr}\``, inline: true },
-                        { name: "📍 ตำแหน่งถ้ำ", value: `${boss.cave} (${boss.entrance})`, inline: false }
+                        { name: "📍 ถ้ำ", value: `${boss.cave} (${boss.entrance})`, inline: false }
                     ],
                     footer: { text: `ห้อง: ${currentRoomId} • Binder Town Boss Timer` },
                     timestamp: new Date().toISOString()
@@ -659,20 +662,30 @@
             safeSendDiscord(payload);
         }
 
-        function sendDiscordBossWarning(boss, spawnTime) {
-            if (!discordConfig.notify5Min || !discordConfig.url) return;
+        function sendDiscordBossWarning(boss, spawnTime, minutesLeft) {
+            if (minutesLeft === 5 && !discordConfig.notify5Min) return;
+            if (minutesLeft === 3 && !discordConfig.notify3Min) return;
+            if (minutesLeft === 1 && !discordConfig.notify1Min) return;
+            if (!discordConfig.url) return;
+
             const spawnStr = formatTimeHM(new Date(spawnTime));
-            
+            const colorMap = { 5: 0xf59e0b, 3: 0xf97316, 1: 0xef4444 };
+            const urgencyMap = { 
+                5: '⚠️ **[เตรียมตัว!] บอสจะเกิดในอีก 5 นาที**',
+                3: '🚨 **[เตรียมวาร์ป!] บอสจะเกิดในอีก 3 นาที**',
+                1: '🔥 **[เข้าหน้าถ้ำด่วน!] บอสจะเกิดในอีก 1 นาที!**'
+            };
+
             const payload = {
-                content: `${getMentionText()}⚠️ **[เตรียมตัว!] บอสจะเกิดในอีก 5 นาที**`,
+                content: `${getMentionText()}${urgencyMap[minutesLeft]}`,
                 embeds: [{
-                    title: `🔥 ${boss.name} (Lv. ${boss.level})`,
-                    description: `บอสกำลังจะเกิดในอีก **5 นาที** กรุณาวาร์ปไปเตรียมพร้อมที่หน้าถ้ำ!`,
-                    color: 0xf59e0b,
+                    title: `⚔️ ${boss.name} (Lv. ${boss.level})`,
+                    description: `บอสกำลังจะเกิดในอีก **${minutesLeft} นาที** กรุณาไปรวมตัวกันที่หน้าถ้ำ!`,
+                    color: colorMap[minutesLeft] || 0xf59e0b,
                     thumbnail: { url: boss.image },
                     fields: [
-                        { name: "⏰ เวลาเกิดโดยประมาณ", value: `\`${spawnStr}\``, inline: true },
-                        { name: "🚪 ทางเข้าถ้ำ", value: `${boss.entrance}`, inline: true },
+                        { name: "⏰ เวลาเกิด", value: `\`${spawnStr}\``, inline: true },
+                        { name: "🚪 ทางเข้า", value: `${boss.entrance}`, inline: true },
                         { name: "🗺️ ถ้ำ", value: `${boss.cave}`, inline: false }
                     ],
                     footer: { text: `ห้อง: ${currentRoomId} • Binder Town Boss Timer` },
@@ -684,12 +697,11 @@
 
         function sendDiscordBossAlive(boss) {
             if (!discordConfig.notifySpawn || !discordConfig.url) return;
-            
             const payload = {
                 content: `${getMentionText()}🚨 **[บอสเกิดแล้ว!] ALIVE NOW**`,
                 embeds: [{
                     title: `👑 ${boss.name} (Lv. ${boss.level}) เกิดแล้ว!`,
-                    description: `**เกิดแล้วตอนนี้!** รีบเข้าไปตีบอสเลย ทุกคนที่ช่วยตี 45 วิแรกจะได้รับชุดของรางวัลทางจดหมาย`,
+                    description: `**เกิดแล้วตอนนี้!** รีบเข้าไปตีบอสเลย ทุกคนที่ช่วยตี 45 วิแรกจะได้รับชุดของรางวัล`,
                     color: 0x10b981,
                     thumbnail: { url: boss.image },
                     fields: [
@@ -729,9 +741,7 @@
 
         let audioCtx = null;
         function getAudioContext() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             return audioCtx;
         }
 
@@ -755,37 +765,49 @@
 
         function playSpawnChime() {
             if (!soundEnabled) return;
-            playTone(523.25, 'triangle', 0.2);
-            setTimeout(() => playTone(659.25, 'triangle', 0.2), 120);
-            setTimeout(() => playTone(783.99, 'triangle', 0.4), 240);
-            setTimeout(() => playTone(1046.50, 'triangle', 0.6), 360);
+            playTone(523.25, 'triangle', 0.18);
+            setTimeout(() => playTone(659.25, 'triangle', 0.18), 120);
+            setTimeout(() => playTone(783.99, 'triangle', 0.25), 240);
+            setTimeout(() => playTone(1046.50, 'triangle', 0.5), 360);
         }
 
-        function playWarningChime() {
+        function playWarning5Min() {
             if (!soundEnabled) return;
             playTone(440, 'sine', 0.15);
             setTimeout(() => playTone(440, 'sine', 0.15), 180);
+        }
+
+        function playWarning3Min() {
+            if (!soundEnabled) return;
+            playTone(523.25, 'sine', 0.12);
+            setTimeout(() => playTone(587.33, 'sine', 0.12), 140);
+            setTimeout(() => playTone(659.25, 'sine', 0.2), 280);
+        }
+
+        function playWarning1Min() {
+            if (!soundEnabled) return;
+            playTone(880, 'square', 0.1);
+            setTimeout(() => playTone(880, 'square', 0.1), 120);
+            setTimeout(() => playTone(1046.50, 'square', 0.25), 240);
         }
 
         function parseRoomFromURL() {
             try {
                 const params = new URLSearchParams(window.location.search);
                 const r = params.get('room');
-                if (r && r.trim().length > 0) {
-                    return r.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 30);
-                }
+                if (r && r.trim().length > 0) return r.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 30);
             } catch (e) {}
-            let saved = localStorage.getItem('binder_room_v4');
+            let saved = localStorage.getItem('binder_room_v5');
             if (!saved) {
-                saved = 'room-' + Math.random().toString(36).substring(2, 7);
-                localStorage.setItem('binder_room_v4', saved);
+                saved = 'party-1';
+                localStorage.setItem('binder_room_v5', saved);
             }
             return saved;
         }
 
         function setRoomURL(room) {
             try {
-                localStorage.setItem('binder_room_v4', room);
+                localStorage.setItem('binder_room_v5', room);
                 if (window.location.protocol.startsWith('http') && !window.location.href.startsWith('blob:')) {
                     const u = new URL(window.location.href);
                     u.searchParams.set('room', room);
@@ -800,8 +822,8 @@
             if (roomEl) roomEl.textContent = roomId;
 
             if (badge) {
-                badge.className = "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] bg-amber-500/20 text-amber-300 border border-amber-500/40";
-                badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span> กำลังเชื่อมต่อ...`;
+                badge.className = "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40";
+                badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span> เชื่อมต่อ...`;
             }
 
             if (eventSource) {
@@ -811,7 +833,6 @@
 
             const topic = `${NTFY_PREFIX}${roomId}`;
 
-            // โหลดประวัติเฉพาะ 3 ชม. ล่าสุด ไม่เอาของเก่าที่หมดอายุแล้ว
             fetch(`https://ntfy.sh/${topic}/json?poll=1&since=3h`)
                 .then(r => r.text())
                 .then(text => {
@@ -835,14 +856,14 @@
                         } catch (e) {}
                     });
                     if (badge) {
-                        badge.className = "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/50";
-                        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> ซิงค์แบบ Realtime`;
+                        badge.className = "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/50";
+                        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Realtime`;
                     }
                 })
                 .catch(() => {
                     if (badge) {
-                        badge.className = "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/50";
-                        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> ซิงค์แบบ Realtime`;
+                        badge.className = "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/50";
+                        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Realtime`;
                     }
                 });
 
@@ -850,8 +871,8 @@
                 eventSource = new EventSource(`https://ntfy.sh/${topic}/sse`);
                 eventSource.onopen = () => {
                     if (badge) {
-                        badge.className = "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/50";
-                        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> ซิงค์แบบ Realtime`;
+                        badge.className = "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/50";
+                        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Realtime`;
                     }
                 };
                 eventSource.onmessage = (e) => {
@@ -910,19 +931,27 @@
             const entry = {
                 deathTime: deathTime,
                 spawnTime: spawnTime,
-                updatedBy: nickname || 'เพื่อนในตี้',
+                updatedBy: nickname || 'เพื่อนในปาร์ตี้',
                 lastUpdated: Date.now()
             };
 
             bossStateMap[bossId] = entry;
             saveLocalState();
+
+            // Clear alert states for new timer
+            alertedBosses.delete(bossId);
+            warned5MinBosses.delete(bossId);
+            warned3MinBosses.delete(bossId);
+            warned1MinBosses.delete(bossId);
+
             webhookSent5Min.delete(bossId);
+            webhookSent3Min.delete(bossId);
+            webhookSent1Min.delete(bossId);
             webhookSentAlive.delete(bossId);
 
             window.renderBosses();
             updateClockAndTimers();
 
-            // Send Discord set notification
             if (deathTime && spawnTime) {
                 const boss = FIELD_BOSSES.find(b => b.id === bossId);
                 if (boss) sendDiscordBossSet(boss, deathTime, spawnTime);
@@ -941,6 +970,7 @@
             }).catch(e => console.warn(e));
         }
 
+        // Exact visual match to screenshot
         window.renderBosses = function() {
             const container = document.getElementById('boss-grid');
             const emptyState = document.getElementById('empty-state');
@@ -980,10 +1010,12 @@
                 const spawnDate = state?.spawnTime ? new Date(state.spawnTime) : null;
                 const remainingMs = state?.spawnTime ? Math.max(0, state.spawnTime - now) : 0;
 
-                let cardClass = 'border-slate-800 bg-[#101726]';
-                let statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400 border border-slate-700">ยังไม่มีข้อมูล</span>';
-                let countdownColor = 'text-slate-400';
-                let avatarBorder = 'border-slate-700';
+                // Border and styling based on status
+                let cardClass = 'border-[#1b253b] bg-[#0c1322]';
+                let statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-[11px] bg-slate-800 text-slate-400 border border-slate-700">ยังไม่มีข้อมูล</span>';
+                let timerDisplay = '-- : -- : --';
+                let timerColor = 'text-cyan-300';
+                let avatarBorder = 'border-slate-700/80';
 
                 let progressPct = 0;
                 if (state?.deathTime && state?.spawnTime) {
@@ -992,46 +1024,52 @@
                 }
 
                 if (status === 'ALIVE') {
-                    cardClass = 'boss-alive-glow border-emerald-500 bg-gradient-to-b from-[#0e271d] to-[#101726]';
-                    statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 animate-pulse"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> เกิดแล้ว (ALIVE)</span>';
-                    countdownColor = 'text-emerald-400 font-extrabold';
-                    avatarBorder = 'border-emerald-500 ring-2 ring-emerald-500/30';
+                    cardClass = 'boss-alive-glow border-emerald-500 bg-[#0a151f]';
+                    statusBadge = '<span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/40"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> เกิดแล้ว (ALIVE)</span>';
+                    timerDisplay = 'เกิดแล้ว !';
+                    timerColor = 'text-emerald-400 font-extrabold';
+                    avatarBorder = 'border-emerald-500';
                 } else if (status === 'SOON') {
-                    cardClass = 'border-amber-500/80 bg-gradient-to-b from-[#241e0d] to-[#101726]';
-                    statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/50"><span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span> ใกล้เกิด (&lt;15น.)</span>';
-                    countdownColor = 'text-amber-400 font-bold';
-                    avatarBorder = 'border-amber-400 ring-2 ring-amber-400/30';
+                    cardClass = 'border-amber-500/70 bg-[#12161f] shadow-lg shadow-amber-950/20';
+                    statusBadge = '<span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/40"><span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span> ใกล้เกิด (&lt;15น.)</span>';
+                    timerDisplay = formatDuration(remainingMs);
+                    timerColor = 'text-amber-400 font-bold';
+                    avatarBorder = 'border-amber-400';
                 } else if (status === 'COOLDOWN') {
-                    cardClass = 'border-indigo-900/60 bg-gradient-to-b from-[#0d1424] to-[#101726]';
-                    statusBadge = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] bg-indigo-500/10 text-indigo-300 border border-indigo-500/30"><i data-lucide="hourglass" class="w-3 h-3 text-indigo-400"></i> รอเกิด (3 ชม.)</span>';
-                    countdownColor = 'text-cyan-300 font-semibold';
-                    avatarBorder = 'border-indigo-600/50';
+                    cardClass = 'border-[#1b253b] bg-[#0c1322]';
+                    statusBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] bg-indigo-500/10 text-indigo-300 border border-indigo-500/30"><i data-lucide="hourglass" class="w-3 h-3 text-indigo-400"></i> รอเกิด (3 ชม.)</span>';
+                    timerDisplay = formatDuration(remainingMs);
+                    timerColor = 'text-cyan-300 font-bold';
+                    avatarBorder = 'border-indigo-500/40';
                 }
 
                 const initials = boss.name.split(' ').map(w => w[0]).join('').substring(0, 3);
-                const placeholder = `https://placehold.co/80x80/1e293b/f8fafc?text=${encodeURIComponent(initials)}`;
+                const placeholder = `https://placehold.co/80x80/131c2e/cbd5e1?text=${encodeURIComponent(initials)}`;
 
                 return `
                 <div class="rounded-2xl p-4 border transition-all duration-300 shadow-xl flex flex-col justify-between ${cardClass}">
                     <div>
+                        <!-- Top Header: Level Badge and Status Pill -->
                         <div class="flex items-center justify-between gap-2 mb-3">
-                            <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-800 text-amber-300 border border-slate-700">
+                            <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-[#101a2c] text-amber-300 border border-slate-700/80 font-mono">
                                 Lv. ${boss.level}
                             </span>
                             <div>${statusBadge}</div>
                         </div>
 
+                        <!-- Boss Avatar and Name -->
                         <div class="flex items-center gap-3 mb-3">
-                            <div class="w-16 h-16 rounded-xl overflow-hidden bg-slate-900 border-2 shrink-0 ${avatarBorder}">
-                                <img src="${boss.image}" alt="${boss.name}" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null; this.src='${placeholder}';">
+                            <div class="w-14 h-14 rounded-xl overflow-hidden bg-[#090f1a] border ${avatarBorder} shrink-0 p-0.5 flex items-center justify-center shadow-md">
+                                <img src="${boss.image}" alt="${boss.name}" class="w-full h-full object-contain" loading="lazy" onerror="this.onerror=null; this.src='${placeholder}';">
                             </div>
                             <div class="min-w-0 flex-1">
                                 <h3 class="font-bold text-sm sm:text-base text-slate-100 truncate" title="${boss.name}">${boss.name}</h3>
-                                <div class="text-[11px] text-amber-400/90 font-mono mt-0.5">Field Boss (3 ชม.)</div>
+                                <div class="text-[11px] text-amber-400/90 font-medium mt-0.5">Field Boss (3 ชม.)</div>
                             </div>
                         </div>
 
-                        <div class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800 text-[11px] text-slate-400 space-y-1">
+                        <!-- Location and Entrance Info Box -->
+                        <div class="bg-[#080d18] p-2.5 rounded-xl border border-slate-800/80 text-[11px] text-slate-400 space-y-1">
                             <div class="flex items-center gap-1.5 truncate">
                                 <i data-lucide="map-pin" class="w-3.5 h-3.5 text-rose-400 shrink-0"></i>
                                 <span>ถ้ำ:</span>
@@ -1044,20 +1082,22 @@
                             </div>
                         </div>
 
-                        <div class="my-3 py-2.5 px-3 bg-slate-950/80 rounded-xl border border-slate-800/90 text-center">
-                            <div class="text-[10px] text-slate-400 uppercase tracking-widest mb-0.5">นับถอยหลังเกิดใหม่</div>
-                            <div id="countdown-${boss.id}" class="text-xl sm:text-2xl font-bold font-mono tracking-wider ${countdownColor}">
-                                ${state?.spawnTime ? (status === 'ALIVE' ? 'เกิดแล้ว!' : formatDuration(remainingMs)) : '--:--:--'}
+                        <!-- Dark Recessed Countdown Card -->
+                        <div class="my-3 py-2.5 px-3 bg-[#080d18] rounded-xl border border-slate-800/80 text-center">
+                            <div class="text-[10px] text-slate-400 tracking-wider mb-0.5">นับถอยหลังเกิดใหม่</div>
+                            
+                            <div id="countdown-${boss.id}" class="text-xl sm:text-2xl font-bold font-mono tracking-wider ${timerColor}">
+                                ${timerDisplay}
                             </div>
 
-                            <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-2">
+                            <div class="w-full bg-[#111a2c] h-1 rounded-full overflow-hidden mt-2">
                                 <div class="bg-indigo-500 h-full transition-all duration-300" style="width: ${progressPct}%;"></div>
                             </div>
 
-                            <div class="mt-2 flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-800/80 pt-1.5">
-                                <span>ตาย: <b class="text-slate-300 font-mono">${deathDate ? formatTimeHM(deathDate) : '-'}</b></span>
-                                <span>➔</span>
-                                <span>เกิด: <b class="text-amber-300 font-mono">${spawnDate ? formatTimeHM(spawnDate) : '-'}</b></span>
+                            <div class="mt-2 flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-800/60 pt-1.5 font-mono">
+                                <span>ตาย: <b class="text-slate-200 font-medium">${deathDate ? formatTimeHM(deathDate) : '-'}</b></span>
+                                <span class="text-slate-600">➔</span>
+                                <span>เกิด: <b class="text-amber-300 font-medium">${spawnDate ? formatTimeHM(spawnDate) : '-'}</b></span>
                             </div>
 
                             ${state?.updatedBy ? `
@@ -1068,42 +1108,43 @@
                         </div>
                     </div>
 
-                    <div class="space-y-2 pt-2 border-t border-slate-800/80">
+                    <!-- Bottom Action Controls matching screenshot exactly -->
+                    <div class="space-y-2 pt-1 border-t border-slate-800/60">
+                        <!-- Primary red button -->
                         <button onclick="window.setDiedNow('${boss.id}')" class="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-rose-600 via-rose-700 to-rose-800 hover:from-rose-500 hover:to-rose-700 text-white font-semibold text-xs shadow-lg shadow-rose-950/50 transition active:scale-95">
                             <i data-lucide="skull" class="w-3.5 h-3.5"></i>
                             <span>เพิ่งตาย (ตอนนี้) ➔ นับทันที 3 ชม.</span>
                         </button>
 
-                        <!-- กรอกเวลาที่เหลือโดยตรง ไม่ต้องมีแท็บสลับ -->
-                        <div class="space-y-1 bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/70">
-                            <div class="flex items-center justify-between">
-                                <label class="text-[10px] text-amber-300 font-medium flex items-center gap-1">
-                                    <i data-lucide="timer" class="w-3 h-3 text-amber-400"></i>
-                                    <span>กรอกเวลาที่เหลือ (เข้าห้องตอนยังไม่เกิด):</span>
-                                </label>
+                        <!-- Remaining time inline input box -->
+                        <div class="space-y-1 bg-[#080d18] p-2.5 rounded-xl border border-slate-800/80">
+                            <div class="text-[10px] text-amber-300 font-medium flex items-center gap-1">
+                                <i data-lucide="timer" class="w-3 h-3 text-amber-400"></i>
+                                <span>กรอกเวลาที่เหลือ (เข้าห้องตอนยังไม่เกิด):</span>
                             </div>
                             <div class="flex items-center gap-1.5 pt-0.5">
-                                <div class="flex-1 flex items-center gap-1">
-                                    <input type="number" id="rem-hrs-${boss.id}" min="0" max="3" placeholder="0" class="w-full bg-slate-900 border border-slate-700 text-xs text-center text-slate-200 rounded-lg py-1.5 outline-none focus:border-indigo-500 font-mono">
-                                    <span class="text-[10px] text-slate-400">ชม.</span>
+                                <div class="flex-1 flex items-center gap-1 bg-[#0c1424] px-1.5 rounded-lg border border-slate-700/80">
+                                    <input type="number" id="rem-hrs-${boss.id}" min="0" max="3" placeholder="0" class="w-full bg-transparent text-xs text-center text-slate-100 py-1 outline-none font-mono">
+                                    <span class="text-[10px] text-slate-400 shrink-0">ชม.</span>
                                 </div>
-                                <div class="flex-1 flex items-center gap-1">
-                                    <input type="number" id="rem-mins-${boss.id}" min="0" max="59" placeholder="00" class="w-full bg-slate-900 border border-slate-700 text-xs text-center text-slate-200 rounded-lg py-1.5 outline-none focus:border-indigo-500 font-mono">
-                                    <span class="text-[10px] text-slate-400">น.</span>
+                                <div class="flex-1 flex items-center gap-1 bg-[#0c1424] px-1.5 rounded-lg border border-slate-700/80">
+                                    <input type="number" id="rem-mins-${boss.id}" min="0" max="59" placeholder="00" class="w-full bg-transparent text-xs text-center text-slate-100 py-1 outline-none font-mono">
+                                    <span class="text-[10px] text-slate-400 shrink-0">น.</span>
                                 </div>
-                                <button onclick="window.setRemainingTime('${boss.id}')" class="px-3 py-1.5 bg-amber-600/30 hover:bg-amber-600/50 border border-amber-500/50 rounded-lg text-xs text-amber-200 font-semibold whitespace-nowrap transition active:scale-95">
+                                <button onclick="window.setRemainingTime('${boss.id}')" class="px-3 py-1 bg-amber-600/25 hover:bg-amber-600/40 border border-amber-500/50 rounded-lg text-xs text-amber-300 font-semibold transition active:scale-95">
                                     เริ่มนับ
                                 </button>
                             </div>
                         </div>
 
-                        <div class="flex items-center gap-2 pt-1">
-                            <button onclick="window.copyBossSingle('${boss.id}')" class="flex-1 flex items-center justify-center gap-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-indigo-300 font-medium text-xs rounded-xl transition active:scale-95">
+                        <!-- Share & Reset buttons -->
+                        <div class="flex items-center gap-1.5 pt-0.5">
+                            <button onclick="window.copyBossSingle('${boss.id}')" class="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#101726] hover:bg-[#151f33] border border-slate-700/80 text-indigo-300 font-medium text-xs rounded-xl transition active:scale-95">
                                 <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
                                 <span>คัดลอกเวลา</span>
                             </button>
                             ${state?.spawnTime ? `
-                                <button onclick="window.resetBossAlive('${boss.id}')" class="px-2.5 py-1.5 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-700/60 text-rose-300 rounded-xl text-xs transition active:scale-95" title="รีเซ็ตบอสตัวนี้">
+                                <button onclick="window.resetBossAlive('${boss.id}')" class="p-2 bg-rose-950/30 hover:bg-rose-900/50 border border-rose-800/50 text-rose-300 rounded-xl transition active:scale-95" title="รีเซ็ตบอสตัวนี้">
                                     <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
                                 </button>
                             ` : ''}
@@ -1121,11 +1162,8 @@
         window.setDiedNow = function(bossId) {
             const now = Date.now();
             const spawnTime = now + COOLDOWN_MS;
-            alertedBosses.delete(bossId);
-            warned5MinBosses.delete(bossId);
-
-            const boss = FIELD_BOSSES.find(b => b.id === bossId);
             broadcastBossUpdate(bossId, now, spawnTime);
+            const boss = FIELD_BOSSES.find(b => b.id === bossId);
             showToast(`เริ่มนับถอยหลัง ${boss?.name || ''} ทันที (3 ชม.)`, "check-circle");
         };
 
@@ -1145,11 +1183,8 @@
             const spawnTime = now + remMs;
             const calculatedDeathTime = spawnTime - COOLDOWN_MS;
 
-            alertedBosses.delete(bossId);
-            warned5MinBosses.delete(bossId);
-
-            const boss = FIELD_BOSSES.find(b => b.id === bossId);
             broadcastBossUpdate(bossId, calculatedDeathTime, spawnTime);
+            const boss = FIELD_BOSSES.find(b => b.id === bossId);
             showToast(`เริ่มนับถอยหลัง ${boss?.name || ''} ตามเวลาที่เหลือ`, "check-circle");
         };
 
@@ -1160,13 +1195,16 @@
 
             alertedBosses.delete(bossId);
             warned5MinBosses.delete(bossId);
+            warned3MinBosses.delete(bossId);
+            warned1MinBosses.delete(bossId);
             webhookSent5Min.delete(bossId);
+            webhookSent3Min.delete(bossId);
+            webhookSent1Min.delete(bossId);
             webhookSentAlive.delete(bossId);
 
             window.renderBosses();
             updateClockAndTimers();
 
-            // ส่งคำสั่งลบแบบระบุ Timestamp ไปที่ห้อง เพื่อให้เพื่อนและตัวเราจำว่าถูกลบแล้ว
             const topic = `${NTFY_PREFIX}${currentRoomId}`;
             fetch(`https://ntfy.sh/${topic}`, {
                 method: 'POST',
@@ -1179,7 +1217,7 @@
                 headers: { 'Title': 'Binder Boss Reset Single' }
             }).catch(e => console.warn(e));
 
-            showToast("รีเซ็ตสถานะบอสเรียบร้อย (ไม่เด้งกลับหลังรีเฟรช)", "rotate-ccw");
+            showToast("รีเซ็ตสถานะบอสเรียบร้อยแล้ว", "rotate-ccw");
         };
 
         window.confirmResetAllBosses = function() {
@@ -1193,7 +1231,11 @@
                     saveLocalState();
                     alertedBosses.clear();
                     warned5MinBosses.clear();
+                    warned3MinBosses.clear();
+                    warned1MinBosses.clear();
                     webhookSent5Min.clear();
+                    webhookSent3Min.clear();
+                    webhookSent1Min.clear();
                     webhookSentAlive.clear();
                     window.renderBosses();
                     updateClockAndTimers();
@@ -1252,7 +1294,7 @@
         window.promptChangeRoom = function() {
             openCustomModal(
                 "เปลี่ยนห้องซิงค์เวลากับเพื่อน",
-                "กรอกชื่อห้อง (เช่น guild-a, party-1) เพื่อให้ทุกคนในห้องเห็นเวลานับถอยหลังตรงกัน:",
+                "กรอกชื่อห้อง (เช่น guild-1, party-1) เพื่อให้ทุกคนในห้องเห็นเวลานับถอยหลังตรงกัน:",
                 true,
                 (val) => {
                     window.closeModal();
@@ -1261,12 +1303,88 @@
             );
         };
 
+        window.switchRoom = function(newRoom) {
+            const sanitized = newRoom.toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 30);
+            if (!sanitized) return;
+            currentRoomId = sanitized;
+            setRoomURL(sanitized);
+            bossStateMap = {};
+            saveLocalState();
+            window.renderBosses();
+            initRealtimeSync(currentRoomId);
+            showToast(`ย้ายไปห้อง "${currentRoomId}" แล้ว`, "door-open");
+        };
+
+        window.handleShareRoom = function() {
+            const modal = document.getElementById('share-modal');
+            const input = document.getElementById('share-url-input');
+            const badge = document.getElementById('share-room-code-badge');
+            if (!modal) return;
+            if (input) input.value = window.location.href;
+            if (badge) badge.textContent = currentRoomId;
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+        };
+
+        window.closeShareModal = function() {
+            const modal = document.getElementById('share-modal');
+            if (modal) modal.classList.add('opacity-0', 'pointer-events-none');
+        };
+
+        window.copyShareURL = function() {
+            copyText(window.location.href);
+            showToast("คัดลอกลิงก์ห้องเรียบร้อย ส่งให้เพื่อนได้เลย!", "copy");
+        };
+
+        window.copyCurrentRoomCode = function() {
+            copyText(currentRoomId);
+            showToast(`คัดลอกรหัสห้อง "${currentRoomId}" แล้ว`, "copy");
+        };
+
+        window.copyBossSingle = function(bossId) {
+            const boss = FIELD_BOSSES.find(b => b.id === bossId);
+            const state = bossStateMap[bossId];
+            if (!boss || !state?.spawnTime) {
+                showToast("บอสตัวนี้ยังไม่ได้เริ่มจับเวลา", "info");
+                return;
+            }
+            const now = Date.now();
+            const diff = state.spawnTime - now;
+            const spawnStr = formatTimeHM(new Date(state.spawnTime));
+            const deathStr = state.deathTime ? formatTimeHM(new Date(state.deathTime)) : '-';
+            const status = diff <= 0 ? 'เกิดแล้ว (ALIVE)' : `เหลืออีก ${formatDuration(diff)}`;
+
+            const text = `⚔️ [${boss.name} - Lv.${boss.level}]\n💀 ตาย: ${deathStr} ➔ 🌟 เกิด: ${spawnStr} (${status})\n📍 ถ้ำ: ${boss.cave} (${boss.entrance})`;
+            copyText(text);
+            showToast(`คัดลอกข้อมูล ${boss.name} แล้ว`, "copy");
+        };
+
+        window.copyAllBossSummary = function() {
+            const now = Date.now();
+            let lines = [`📋 [ตารางเวลาเกิด Binder Town Field Boss - ห้อง ${currentRoomId}]`];
+            
+            FIELD_BOSSES.forEach(boss => {
+                const state = bossStateMap[boss.id];
+                if (state?.spawnTime) {
+                    const diff = state.spawnTime - now;
+                    const spawnStr = formatTimeHM(new Date(state.spawnTime));
+                    const statusStr = diff <= 0 ? '🔴 เกิดแล้ว!' : `รอ ${formatDuration(diff)}`;
+                    lines.push(`• Lv.${boss.level} ${boss.name}: เกิด ${spawnStr} (${statusStr}) @ ${boss.cave}`);
+                } else {
+                    lines.push(`• Lv.${boss.level} ${boss.name}: ยังไม่มีข้อมูล @ ${boss.cave}`);
+                }
+            });
+
+            lines.push(`\nลิงก์ดูเวลา Realtime: ${window.location.href}`);
+            copyText(lines.join('\n'));
+            showToast("คัดลอกสรุปบอสทั้งหมดเรียบร้อยแล้ว", "copy");
+        };
+
         window.saveNickname = function() {
             const input = document.getElementById('nickname-input');
             if (input && input.value.trim()) {
                 nickname = input.value.trim().slice(0, 15);
                 localStorage.setItem(NICK_KEY, nickname);
-                showToast(`บันทึกชื่อ: ${nickname} แล้ว`, "user-check");
+                showToast(`บันทึกชื่อ: ${nickname} แล้ว`, "check");
             }
         };
 
@@ -1353,34 +1471,64 @@
                 const diff = state.spawnTime - nowMs;
                 const cdEl = document.getElementById(`countdown-${boss.id}`);
 
-                // อัปเดตตัวเลขนับถอยหลังแบบ direct DOM เพื่อความลื่นไหล
+                // Direct DOM update for 60fps performance
                 if (cdEl) {
                     if (diff <= 0) {
-                        cdEl.textContent = 'เกิดแล้ว!';
+                        cdEl.textContent = 'เกิดแล้ว !';
                         cdEl.className = 'text-xl sm:text-2xl font-bold font-mono tracking-wider text-emerald-400 font-extrabold';
                     } else {
                         cdEl.textContent = formatDuration(diff);
+                        if (diff <= 15 * 60 * 1000) {
+                            cdEl.className = 'text-xl sm:text-2xl font-bold font-mono tracking-wider text-amber-400 font-bold';
+                        } else {
+                            cdEl.className = 'text-xl sm:text-2xl font-bold font-mono tracking-wider text-cyan-300 font-bold';
+                        }
                     }
                 }
 
-                // 1. เตือน 5 นาทีล่วงหน้า (Trigger ครั้งเดียวเท่านั้น และต้องเป็นช่วง 0 ถึง 5 นาที)
+                // 5-minute Warning (300,000 ms)
                 if (diff > 0 && diff <= 5 * 60 * 1000) {
                     if (!warned5MinBosses.has(boss.id)) {
                         warned5MinBosses.add(boss.id);
-                        playWarningChime();
+                        playWarning5Min();
                         showToast(`⚠️ [${boss.name}] จะเกิดในอีก 5 นาที!`, "bell-ring");
                     }
                     if (!webhookSent5Min.has(boss.id)) {
                         webhookSent5Min.add(boss.id);
-                        sendDiscordBossWarning(boss, state.spawnTime);
+                        sendDiscordBossWarning(boss, state.spawnTime, 5);
                     }
                 }
 
-                // 2. เตือนเมื่อบอสเกิด (Trigger ครั้งเดียว และต้องไม่เลยเวลาเกิดเกิน 10 นาที ป้องกันของเก่าค้าง)
+                // 3-minute Warning (180,000 ms)
+                if (diff > 0 && diff <= 3 * 60 * 1000) {
+                    if (!warned3MinBosses.has(boss.id)) {
+                        warned3MinBosses.add(boss.id);
+                        playWarning3Min();
+                        showToast(`🚨 [${boss.name}] จะเกิดในอีก 3 นาที! เตรียมวาร์ป!`, "bell-ring");
+                    }
+                    if (!webhookSent3Min.has(boss.id)) {
+                        webhookSent3Min.add(boss.id);
+                        sendDiscordBossWarning(boss, state.spawnTime, 3);
+                    }
+                }
+
+                // 1-minute Warning (60,000 ms)
+                if (diff > 0 && diff <= 1 * 60 * 1000) {
+                    if (!warned1MinBosses.has(boss.id)) {
+                        warned1MinBosses.add(boss.id);
+                        playWarning1Min();
+                        showToast(`🔥 [${boss.name}] จะเกิดในอีก 1 นาที! เข้าหน้าถ้ำเลย!`, "swords");
+                    }
+                    if (!webhookSent1Min.has(boss.id)) {
+                        webhookSent1Min.add(boss.id);
+                        sendDiscordBossWarning(boss, state.spawnTime, 1);
+                    }
+                }
+
+                // ALIVE Warning (0 ms)
                 if (diff <= 0) {
                     if (!alertedBosses.has(boss.id)) {
                         alertedBosses.add(boss.id);
-                        // ถ้าเวลาเกิดไม่ได้เก่าเกิน 10 นาที จึงจะส่งเสียงเตือน
                         if (Math.abs(diff) < ALIVE_WEBHOOK_WINDOW_MS) {
                             playSpawnChime();
                             showToast(`⚔️ [${boss.name}] เกิดแล้ว!`, "swords");
@@ -1388,7 +1536,6 @@
                         needReRender = true;
                     }
 
-                    // Webhook ต้องยิงเฉพาะบอสที่เพิ่งเกิดสดๆ เท่านั้น (ไม่ยิงบอสที่ตายตั้งแต่ชม.ที่แล้ว)
                     if (!webhookSentAlive.has(boss.id)) {
                         webhookSentAlive.add(boss.id);
                         if (Math.abs(diff) < ALIVE_WEBHOOK_WINDOW_MS) {
