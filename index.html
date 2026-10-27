@@ -420,6 +420,7 @@
         let webhookSent5Min = new Set();
         let webhookSentAlive = new Set();
         let eventSource = null;
+        let isSendingWebhook = false;
 
         // Discord settings state
         let discordConfig = {
@@ -451,17 +452,34 @@
             }
         }
 
-        async function sendToDiscordWebhook(payload) {
+        // Safe Non-Blocking Discord Dispatcher (แก้ปัญหาค้างจาก CORS & Rate Limit)
+        function safeSendDiscord(payload) {
             if (!discordConfig.url || !discordConfig.url.trim().startsWith('http')) return;
-            try {
-                await fetch(discordConfig.url.trim(), {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-            } catch (e) {
-                console.warn("Discord Webhook Error:", e);
-            }
+            const targetUrl = discordConfig.url.trim();
+
+            // รันแบบ background task แยกเด็ดขาด ไม่บล็อก Timer UI
+            setTimeout(async () => {
+                try {
+                    // ลองส่งตรงผ่าน fetch ปกติ
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 4000); // ตัดจบถ้าช้าเกิน 4 วิ
+
+                    await fetch(targetUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                        signal: controller.signal,
+                        mode: 'no-cors' // ใช้ no-cors ป้องกัน browser throw CORS block ค้าง
+                    });
+                    clearTimeout(timeoutId);
+                } catch (e) {
+                    // ถ้า fetch ไม่สำเร็จ ลองสำรองด้วย sendBeacon
+                    try {
+                        const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+                        navigator.sendBeacon(targetUrl, blob);
+                    } catch (err) {}
+                }
+            }, 10);
         }
 
         function getMentionText() {
@@ -480,7 +498,7 @@
                 embeds: [{
                     title: `⚔️ ${boss.name} (Lv. ${boss.level})`,
                     description: `เริ่มนับถอยหลัง **3 ชั่วโมง** แล้วโดย **${nickname || 'เพื่อนในตี้'}**`,
-                    color: 0x6366f1, // Indigo
+                    color: 0x6366f1,
                     thumbnail: { url: boss.image },
                     fields: [
                         { name: "💀 เวลาที่ตาย", value: `\`${deathStr}\``, inline: true },
@@ -491,7 +509,7 @@
                     timestamp: new Date().toISOString()
                 }]
             };
-            sendToDiscordWebhook(payload);
+            safeSendDiscord(payload);
         }
 
         function sendDiscordBossWarning(boss, spawnTime) {
@@ -503,7 +521,7 @@
                 embeds: [{
                     title: `🔥 ${boss.name} (Lv. ${boss.level})`,
                     description: `บอสกำลังจะเกิดในอีก **5 นาที** กรุณาวาร์ปไปเตรียมพร้อมที่หน้าถ้ำ!`,
-                    color: 0xf59e0b, // Amber
+                    color: 0xf59e0b,
                     thumbnail: { url: boss.image },
                     fields: [
                         { name: "⏰ เวลาเกิดโดยประมาณ", value: `\`${spawnStr}\``, inline: true },
@@ -514,7 +532,7 @@
                     timestamp: new Date().toISOString()
                 }]
             };
-            sendToDiscordWebhook(payload);
+            safeSendDiscord(payload);
         }
 
         function sendDiscordBossAlive(boss) {
@@ -525,7 +543,7 @@
                 embeds: [{
                     title: `👑 ${boss.name} (Lv. ${boss.level}) เกิดแล้ว!`,
                     description: `**เกิดแล้วตอนนี้!** รีบเข้าไปตีบอสเลย ทุกคนที่ช่วยตี 45 วิแรกจะได้รับชุดของรางวัลทางจดหมาย`,
-                    color: 0x10b981, // Emerald Green
+                    color: 0x10b981,
                     thumbnail: { url: boss.image },
                     fields: [
                         { name: "📍 ถ้ำของบอส", value: `**${boss.cave}**`, inline: true },
@@ -535,7 +553,7 @@
                     timestamp: new Date().toISOString()
                 }]
             };
-            sendToDiscordWebhook(payload);
+            safeSendDiscord(payload);
         }
 
         function pad2(n) { return String(n).padStart(2, '0'); }
@@ -1096,9 +1114,12 @@
 
             try {
                 showToast("กำลังส่งข้อความทดสอบ...", "send");
-                const res = await fetch(testUrl, {
+                
+                // ใช้ no-cors mode เพื่อหลีกเลี่ยง CORS block บน Browser
+                await fetch(testUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    mode: 'no-cors',
                     body: JSON.stringify({
                         content: `🔔 **[ทดสอบการเชื่อมต่อ Binder Town Boss Timer]**\nการเชื่อมต่อ Webhook สำเร็จเรียบร้อย! ระบบพร้อมแจ้งเตือนเวลาบอสเข้าห้องนี้แล้ว ✅`,
                         embeds: [{
@@ -1111,11 +1132,7 @@
                     })
                 });
 
-                if (res.ok || res.status === 204) {
-                    showToast("ส่งข้อความทดสอบเข้า Discord สำเร็จแล้ว!", "check");
-                } else {
-                    showToast("ไม่สามารถส่งได้ ตรวจสอบ URL อีกครั้ง (Error " + res.status + ")", "alert-circle");
-                }
+                showToast("ส่งสัญญาณเข้า Discord แล้ว (ตรวจสอบในช่องแชท)", "check");
             } catch (err) {
                 showToast("เกิดข้อผิดพลาดในการเชื่อมต่อ Discord", "alert-triangle");
             }
@@ -1355,25 +1372,37 @@
                 const diff = state.spawnTime - nowMs;
                 const cdEl = document.getElementById(`countdown-${boss.id}`);
 
-                if (diff > 0 && diff <= 5 * 60 * 1000 && !warned5MinBosses.has(boss.id)) {
-                    warned5MinBosses.add(boss.id);
-                    playWarningChime();
-                    showToast(`⚠️ [${boss.name}] จะเกิดในอีก 5 นาที!`, "bell-ring");
+                // อัปเดตตัวเลขนับถอยหลังแบบ direct DOM เพื่อความลื่นไหล
+                if (cdEl) {
+                    if (diff <= 0) {
+                        cdEl.textContent = 'เกิดแล้ว!';
+                        cdEl.className = 'text-xl sm:text-2xl font-bold font-mono tracking-wider text-emerald-400 font-extrabold';
+                    } else {
+                        cdEl.textContent = formatDuration(diff);
+                    }
+                }
 
-                    // Send Discord 5-min warning
+                // 1. เตือน 5 นาทีล่วงหน้า (Trigger ครั้งเดียวเท่านั้น)
+                if (diff > 0 && diff <= 5 * 60 * 1000) {
+                    if (!warned5MinBosses.has(boss.id)) {
+                        warned5MinBosses.add(boss.id);
+                        playWarningChime();
+                        showToast(`⚠️ [${boss.name}] จะเกิดในอีก 5 นาที!`, "bell-ring");
+                    }
                     if (!webhookSent5Min.has(boss.id)) {
                         webhookSent5Min.add(boss.id);
                         sendDiscordBossWarning(boss, state.spawnTime);
                     }
                 }
 
-                if (diff <= 0 && !alertedBosses.has(boss.id)) {
-                    alertedBosses.add(boss.id);
-                    playSpawnChime();
-                    showToast(`⚔️ [${boss.name}] เกิดแล้ว!`, "swords");
-                    needReRender = true;
-
-                    // Send Discord Alive notification
+                // 2. เตือนเมื่อบอสเกิด (Trigger ครั้งเดียวเท่านั้น)
+                if (diff <= 0) {
+                    if (!alertedBosses.has(boss.id)) {
+                        alertedBosses.add(boss.id);
+                        playSpawnChime();
+                        showToast(`⚔️ [${boss.name}] เกิดแล้ว!`, "swords");
+                        needReRender = true;
+                    }
                     if (!webhookSentAlive.has(boss.id)) {
                         webhookSentAlive.add(boss.id);
                         sendDiscordBossAlive(boss);
