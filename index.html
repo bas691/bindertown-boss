@@ -425,6 +425,26 @@
         let eventSource = null;
         let isSendingWebhook = false;
 
+        // Key สำหรับจำสถานะในเครื่อง
+        const LOCAL_STATE_KEY = 'binder_boss_state_v4';
+
+        function loadLocalState() {
+            try {
+                const saved = localStorage.getItem(LOCAL_STATE_KEY);
+                if (saved) {
+                    bossStateMap = JSON.parse(saved);
+                }
+            } catch (e) {
+                bossStateMap = {};
+            }
+        }
+
+        function saveLocalState() {
+            try {
+                localStorage.setItem(LOCAL_STATE_KEY, JSON.stringify(bossStateMap));
+            } catch (e) {}
+        }
+
         // Discord settings state
         let discordConfig = {
             url: '',
@@ -631,10 +651,8 @@
                     return r.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 30);
                 }
             } catch (e) {}
-            // ถ้าไม่มี ให้ดึงจาก storage หรือตั้ง default ที่ปลอดภัย
             let saved = localStorage.getItem('binder_room_v4');
             if (!saved) {
-                // สร้างห้องเฉพาะ เช่น room-xxxx เพื่อไม่ให้ชนประวัติเก่าของคนอื่น
                 saved = 'room-' + Math.random().toString(36).substring(2, 7);
                 localStorage.setItem('binder_room_v4', saved);
             }
@@ -644,7 +662,7 @@
         function setRoomURL(room) {
             try {
                 localStorage.setItem('binder_room_v4', room);
-                if (window.location.protocol.startsWith('http')) {
+                if (window.location.protocol.startsWith('http') && !window.location.href.startsWith('blob:')) {
                     const u = new URL(window.location.href);
                     u.searchParams.set('room', room);
                     window.history.replaceState({}, '', u.toString());
@@ -669,7 +687,8 @@
 
             const topic = `${NTFY_PREFIX}${roomId}`;
 
-            fetch(`https://ntfy.sh/${topic}/json?poll=1&since=all`)
+            // โหลดประวัติเฉพาะ 3 ชม. ล่าสุด ไม่เอาของเก่าที่หมดอายุแล้ว
+            fetch(`https://ntfy.sh/${topic}/json?poll=1&since=3h`)
                 .then(r => r.text())
                 .then(text => {
                     const lines = text.trim().split('\n');
@@ -681,8 +700,11 @@
                                 const payload = JSON.parse(item.message);
                                 if (payload.type === 'SYNC' && payload.bosses) {
                                     applyIncomingBosses(payload.bosses);
+                                } else if (payload.type === 'RESET_SINGLE' && payload.bossId) {
+                                    applyIncomingResetSingle(payload.bossId, payload.timestamp);
                                 } else if (payload.type === 'RESET') {
                                     bossStateMap = {};
+                                    saveLocalState();
                                     window.renderBosses();
                                 }
                             }
@@ -715,8 +737,11 @@
                         const payload = JSON.parse(data.message);
                         if (payload.type === 'SYNC' && payload.bosses) {
                             applyIncomingBosses(payload.bosses);
+                        } else if (payload.type === 'RESET_SINGLE' && payload.bossId) {
+                            applyIncomingResetSingle(payload.bossId, payload.timestamp);
                         } else if (payload.type === 'RESET') {
                             bossStateMap = {};
+                            saveLocalState();
                             window.renderBosses();
                             showToast("เพื่อนในห้องได้รีเซ็ตตารางเวลาบอส", "rotate-ccw");
                         }
@@ -725,17 +750,33 @@
             } catch (e) {}
         }
 
+        function applyIncomingResetSingle(bossId, timestamp) {
+            const loc = bossStateMap[bossId];
+            if (!loc || (loc.lastUpdated && loc.lastUpdated <= timestamp)) {
+                delete bossStateMap[bossId];
+                saveLocalState();
+                window.renderBosses();
+                updateClockAndTimers();
+            }
+        }
+
         function applyIncomingBosses(incoming) {
             let changed = false;
             Object.keys(incoming).forEach(id => {
                 const inc = incoming[id];
                 const loc = bossStateMap[id];
-                if (!loc || (inc.lastUpdated && inc.lastUpdated > (loc.lastUpdated || 0))) {
+                if (!inc || inc.deleted) {
+                    if (loc && (!inc.lastUpdated || inc.lastUpdated >= (loc.lastUpdated || 0))) {
+                        delete bossStateMap[id];
+                        changed = true;
+                    }
+                } else if (!loc || (inc.lastUpdated && inc.lastUpdated > (loc.lastUpdated || 0))) {
                     bossStateMap[id] = inc;
                     changed = true;
                 }
             });
             if (changed) {
+                saveLocalState();
                 window.renderBosses();
                 updateClockAndTimers();
             }
@@ -750,6 +791,7 @@
             };
 
             bossStateMap[bossId] = entry;
+            saveLocalState();
             webhookSent5Min.delete(bossId);
             webhookSentAlive.delete(bossId);
 
@@ -908,7 +950,7 @@
                             <span>เพิ่งตาย (ตอนนี้) ➔ นับทันที 3 ชม.</span>
                         </button>
 
-                        <!-- กรอกเวลาที่เหลือโดยตรง ไม่ต้องสลับแท็บ -->
+                        <!-- กรอกเวลาที่เหลือโดยตรง ไม่ต้องมีแท็บสลับ -->
                         <div class="space-y-1 bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/70">
                             <div class="flex items-center justify-between">
                                 <label class="text-[10px] text-amber-300 font-medium flex items-center gap-1">
@@ -937,7 +979,7 @@
                                 <span>คัดลอกเวลา</span>
                             </button>
                             ${state?.spawnTime ? `
-                                <button onclick="window.resetBossAlive('${boss.id}')" class="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-rose-400 rounded-xl text-xs transition" title="รีเซ็ตบอสตัวนี้">
+                                <button onclick="window.resetBossAlive('${boss.id}')" class="px-2.5 py-1.5 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-700/60 text-rose-300 rounded-xl text-xs transition active:scale-95" title="รีเซ็ตบอสตัวนี้">
                                     <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
                                 </button>
                             ` : ''}
@@ -988,7 +1030,10 @@
         };
 
         window.resetBossAlive = function(bossId) {
+            const now = Date.now();
             delete bossStateMap[bossId];
+            saveLocalState();
+
             alertedBosses.delete(bossId);
             warned5MinBosses.delete(bossId);
             webhookSent5Min.delete(bossId);
@@ -997,222 +1042,20 @@
             window.renderBosses();
             updateClockAndTimers();
 
+            // ส่งคำสั่งลบแบบระบุ Timestamp ไปที่ห้อง เพื่อให้เพื่อนและตัวเราจำว่าถูกลบแล้ว
             const topic = `${NTFY_PREFIX}${currentRoomId}`;
             fetch(`https://ntfy.sh/${topic}`, {
                 method: 'POST',
                 body: JSON.stringify({
-                    type: 'SYNC',
+                    type: 'RESET_SINGLE',
                     roomId: currentRoomId,
-                    bosses: bossStateMap,
-                    timestamp: Date.now()
+                    bossId: bossId,
+                    timestamp: now
                 }),
                 headers: { 'Title': 'Binder Boss Reset Single' }
             }).catch(e => console.warn(e));
 
-            showToast("รีเซ็ตสถานะบอสเรียบร้อย", "rotate-ccw");
-        };
-
-        window.handleShareRoom = function() {
-            const modal = document.getElementById('share-modal');
-            const urlInput = document.getElementById('share-url-input');
-            const roomBadge = document.getElementById('share-room-code-badge');
-
-            if (roomBadge) roomBadge.textContent = currentRoomId;
-
-            let shareUrl = window.location.href;
-            try {
-                const u = new URL(window.location.href);
-                u.searchParams.set('room', currentRoomId);
-                shareUrl = u.toString();
-            } catch (e) {}
-
-            if (urlInput) urlInput.value = shareUrl;
-            if (modal) modal.classList.remove('opacity-0', 'pointer-events-none');
-            if (window.lucide && typeof window.lucide.createIcons === 'function') {
-                window.lucide.createIcons();
-            }
-        };
-
-        window.switchRoom = function(newRoomId) {
-            if (!newRoomId) return;
-            const cleaned = newRoomId.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 30);
-            if (!cleaned) return;
-
-            currentRoomId = cleaned;
-            setRoomURL(currentRoomId);
-            bossStateMap = {};
-            alertedBosses.clear();
-            warned5MinBosses.clear();
-            webhookSent5Min.clear();
-            webhookSentAlive.clear();
-
-            window.renderBosses();
-            initRealtimeSync(currentRoomId);
-            showToast(`เปลี่ยนไปยังห้อง [${currentRoomId}] แล้ว`, "door-open");
-        };
-
-        window.openDiscordModal = function() {
-            const urlInput = document.getElementById('discord-webhook-url');
-            const setCheck = document.getElementById('webhook-notify-set');
-            const minCheck = document.getElementById('webhook-notify-5min');
-            const spawnCheck = document.getElementById('webhook-notify-spawn');
-            const mentionSel = document.getElementById('webhook-mention');
-
-            if (urlInput) urlInput.value = discordConfig.url || '';
-            if (setCheck) setCheck.checked = discordConfig.notifySet !== false;
-            if (minCheck) minCheck.checked = discordConfig.notify5Min !== false;
-            if (spawnCheck) spawnCheck.checked = discordConfig.notifySpawn !== false;
-            if (mentionSel) mentionSel.value = discordConfig.mention || 'none';
-
-            const modal = document.getElementById('discord-modal');
-            if (modal) modal.classList.remove('opacity-0', 'pointer-events-none');
-            if (window.lucide && typeof window.lucide.createIcons === 'function') {
-                window.lucide.createIcons();
-            }
-        };
-
-        window.closeDiscordModal = function() {
-            const modal = document.getElementById('discord-modal');
-            if (modal) modal.classList.add('opacity-0', 'pointer-events-none');
-        };
-
-        window.saveDiscordWebhook = function() {
-            const urlInput = document.getElementById('discord-webhook-url');
-            const setCheck = document.getElementById('webhook-notify-set');
-            const minCheck = document.getElementById('webhook-notify-5min');
-            const spawnCheck = document.getElementById('webhook-notify-spawn');
-            const mentionSel = document.getElementById('webhook-mention');
-
-            discordConfig = {
-                url: urlInput ? urlInput.value.trim() : '',
-                notifySet: setCheck ? setCheck.checked : true,
-                notify5Min: minCheck ? minCheck.checked : true,
-                notifySpawn: spawnCheck ? spawnCheck.checked : true,
-                mention: mentionSel ? mentionSel.value : 'none'
-            };
-
-            localStorage.setItem(DISCORD_KEY, JSON.stringify(discordConfig));
-            updateWebhookButtonState();
-            window.closeDiscordModal();
-            showToast("บันทึกการตั้งค่า Discord Webhook เรียบร้อย!", "check-circle");
-        };
-
-        window.clearDiscordWebhook = function() {
-            discordConfig = {
-                url: '',
-                notifySet: true,
-                notify5Min: true,
-                notifySpawn: true,
-                mention: 'none'
-            };
-            localStorage.removeItem(DISCORD_KEY);
-            const urlInput = document.getElementById('discord-webhook-url');
-            if (urlInput) urlInput.value = '';
-            updateWebhookButtonState();
-            window.closeDiscordModal();
-            showToast("ลบ Webhook เรียบร้อยแล้ว", "trash-2");
-        };
-
-        window.testDiscordWebhook = async function() {
-            const urlInput = document.getElementById('discord-webhook-url');
-            const testUrl = urlInput ? urlInput.value.trim() : discordConfig.url;
-
-            if (!testUrl || !testUrl.startsWith('http')) {
-                showToast("กรุณากรอก Discord Webhook URL ให้ถูกต้องก่อนทดสอบ", "alert-circle");
-                return;
-            }
-
-            try {
-                showToast("กำลังส่งข้อความทดสอบ...", "send");
-                
-                // ใช้ no-cors mode เพื่อหลีกเลี่ยง CORS block บน Browser
-                await fetch(testUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    mode: 'no-cors',
-                    body: JSON.stringify({
-                        content: `🔔 **[ทดสอบการเชื่อมต่อ Binder Town Boss Timer]**\nการเชื่อมต่อ Webhook สำเร็จเรียบร้อย! ระบบพร้อมแจ้งเตือนเวลาบอสเข้าห้องนี้แล้ว ✅`,
-                        embeds: [{
-                            title: "ทดสอบการแจ้งเตือนบอส",
-                            description: "หากเห็นข้อความนี้ แสดงว่า Discord จะส่งเสียงแจ้งเตือนเมื่อบอสใกล้เกิดและเมื่อบอสเกิดทันที",
-                            color: 0x5865F2,
-                            footer: { text: "Binder Town Field Boss Timer" },
-                            timestamp: new Date().toISOString()
-                        }]
-                    })
-                });
-
-                showToast("ส่งสัญญาณเข้า Discord แล้ว (ตรวจสอบในช่องแชท)", "check");
-            } catch (err) {
-                showToast("เกิดข้อผิดพลาดในการเชื่อมต่อ Discord", "alert-triangle");
-            }
-        };
-
-        window.closeShareModal = function() {
-            const modal = document.getElementById('share-modal');
-            if (modal) modal.classList.add('opacity-0', 'pointer-events-none');
-        };
-
-        window.copyShareURL = function() {
-            const inputEl = document.getElementById('share-url-input');
-            if (inputEl) {
-                copyText(inputEl.value);
-                showToast("คัดลอกลิงก์เรียบร้อยแล้ว!", "copy");
-            }
-        };
-
-        window.copyCurrentRoomCode = function() {
-            copyText(currentRoomId);
-            showToast(`คัดลอกรหัสห้อง [${currentRoomId}] แล้ว`, "check");
-        };
-
-        window.copyBossSingle = function(bossId) {
-            const boss = FIELD_BOSSES.find(b => b.id === bossId);
-            if (!boss) return;
-            const state = bossStateMap[bossId];
-            const now = Date.now();
-            let msg = "";
-
-            if (!state || !state.spawnTime) {
-                msg = `[${boss.name}] Lv.${boss.level} | ถ้ำ: ${boss.cave} (${boss.entrance}) | ยังไม่มีข้อมูลเวลา`;
-            } else {
-                const deathStr = formatTimeHM(new Date(state.deathTime));
-                const spawnStr = formatTimeHM(new Date(state.spawnTime));
-                const diff = state.spawnTime - now;
-
-                if (diff <= 0) {
-                    msg = `⚔️ [${boss.name}] Lv.${boss.level} | เกิดแล้ว! (เกิดตั้งแต่ ${spawnStr}) | ถ้ำ: ${boss.cave} | บันทึกโดย: ${state.updatedBy || 'ปาร์ตี้'}`;
-                } else {
-                    const totalSec = Math.floor(diff / 1000);
-                    const hrs = Math.floor(totalSec / 3600);
-                    const mins = Math.floor((totalSec % 3600) / 60);
-                    msg = `⏳ [${boss.name}] Lv.${boss.level} | ตาย: ${deathStr} ➔ เกิด: ${spawnStr} (เหลืออีก ${hrs}ชม. ${mins}น.) | ถ้ำ: ${boss.cave}`;
-                }
-            }
-            copyText(msg);
-            showToast(`คัดลอกข้อมูล ${boss.name} แล้ว`, "copy");
-        };
-
-        window.copyAllBossSummary = function() {
-            const now = Date.now();
-            let lines = [`📋 === Binder Town Field Bosses (ห้อง: ${currentRoomId}) ===`];
-
-            FIELD_BOSSES.forEach(boss => {
-                const state = bossStateMap[boss.id];
-                if (state && state.spawnTime) {
-                    const deathStr = formatTimeHM(new Date(state.deathTime));
-                    const spawnStr = formatTimeHM(new Date(state.spawnTime));
-                    const diff = state.spawnTime - now;
-                    let stat = diff <= 0 ? "🟢 เกิดแล้ว (ALIVE)" : `รออีก ${formatDuration(diff)}`;
-                    lines.push(`• [${boss.name}] Lv.${boss.level} | ตาย: ${deathStr} -> เกิด: ${spawnStr} [${stat}] (${boss.cave})`);
-                } else {
-                    lines.push(`• [${boss.name}] Lv.${boss.level} | ยังไม่มีข้อมูล (${boss.cave})`);
-                }
-            });
-
-            lines.push(`⏱ เวลาปัจจุบัน: ${formatTimeHM(new Date(now))}`);
-            copyText(lines.join('\n'));
-            showToast("คัดลอกสรุปบอสทั้งหมดแล้ว!", "check");
+            showToast("รีเซ็ตสถานะบอสเรียบร้อย (ไม่เด้งกลับหลังรีเฟรช)", "rotate-ccw");
         };
 
         window.confirmResetAllBosses = function() {
@@ -1223,9 +1066,13 @@
                 () => {
                     window.closeModal();
                     bossStateMap = {};
+                    saveLocalState();
                     alertedBosses.clear();
                     warned5MinBosses.clear();
+                    webhookSent5Min.clear();
+                    webhookSentAlive.clear();
                     window.renderBosses();
+                    updateClockAndTimers();
 
                     const topic = `${NTFY_PREFIX}${currentRoomId}`;
                     fetch(`https://ntfy.sh/${topic}`, {
@@ -1437,6 +1284,7 @@
             setRoomURL(currentRoomId);
 
             loadDiscordConfig();
+            loadLocalState(); // โหลดสถานะที่เคยบันทึกไว้ในเครื่อง
 
             const savedSound = localStorage.getItem(SOUND_KEY);
             if (savedSound !== null) soundEnabled = savedSound === 'true';
