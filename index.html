@@ -423,7 +423,6 @@
         let webhookSent5Min = new Set();
         let webhookSentAlive = new Set();
         let eventSource = null;
-        let isSendingWebhook = false;
 
         // Key สำหรับจำสถานะในเครื่อง
         const LOCAL_STATE_KEY = 'binder_boss_state_v4';
@@ -459,6 +458,17 @@
                 const saved = localStorage.getItem(DISCORD_KEY);
                 if (saved) {
                     discordConfig = { ...discordConfig, ...JSON.parse(saved) };
+                    const urlInput = document.getElementById('discord-webhook-url');
+                    const notifySet = document.getElementById('webhook-notify-set');
+                    const notify5Min = document.getElementById('webhook-notify-5min');
+                    const notifySpawn = document.getElementById('webhook-notify-spawn');
+                    const mention = document.getElementById('webhook-mention');
+
+                    if (urlInput) urlInput.value = discordConfig.url || '';
+                    if (notifySet) notifySet.checked = discordConfig.notifySet !== false;
+                    if (notify5Min) notify5Min.checked = discordConfig.notify5Min !== false;
+                    if (notifySpawn) notifySpawn.checked = discordConfig.notifySpawn !== false;
+                    if (mention) mention.value = discordConfig.mention || 'none';
                 }
             } catch (e) {}
             updateWebhookButtonState();
@@ -468,42 +478,156 @@
             const label = document.getElementById('webhook-btn-label');
             if (label) {
                 if (discordConfig.url && discordConfig.url.trim().length > 0) {
-                    label.innerHTML = `Discord <span class="text-emerald-400 font-bold">• เปิดใช้</span>`;
+                    label.innerHTML = `Discord <span class="text-emerald-400 font-bold">• เชื่อมต่อแล้ว</span>`;
                 } else {
                     label.textContent = 'Discord Webhook';
                 }
             }
         }
 
-        // Safe Non-Blocking Discord Dispatcher (แก้ปัญหาค้างจาก CORS & Rate Limit)
-        function safeSendDiscord(payload) {
-            if (!discordConfig.url || !discordConfig.url.trim().startsWith('http')) return;
-            const targetUrl = discordConfig.url.trim();
+        // ระบบส่ง Discord Webhook แบบทนทาน (มี Fallback แก้ปัญหา Browser CORS)
+        async function sendToDiscordWebhook(payload) {
+            if (!discordConfig.url || !discordConfig.url.trim().startsWith('http')) {
+                return { success: false, error: 'กรุณากรอก Discord Webhook URL' };
+            }
 
-            // รันแบบ background task แยกเด็ดขาด ไม่บล็อก Timer UI
-            setTimeout(async () => {
-                try {
-                    // ลองส่งตรงผ่าน fetch ปกติ
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 4000); // ตัดจบถ้าช้าเกิน 4 วิ
+            const rawUrl = discordConfig.url.trim();
 
-                    await fetch(targetUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload),
-                        signal: controller.signal,
-                        mode: 'no-cors' // ใช้ no-cors ป้องกัน browser throw CORS block ค้าง
-                    });
-                    clearTimeout(timeoutId);
-                } catch (e) {
-                    // ถ้า fetch ไม่สำเร็จ ลองสำรองด้วย sendBeacon
-                    try {
-                        const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-                        navigator.sendBeacon(targetUrl, blob);
-                    } catch (err) {}
+            // วิธีที่ 1: ยิงตรงหา Discord
+            try {
+                const response = await fetch(rawUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (response.ok || response.status === 204) {
+                    return { success: true };
                 }
+            } catch (directErr) {
+                // หากยิงตรงไม่ผ่านเนื่องจากติด CORS จากเบราว์เซอร์ ให้สำรองด้วยวิธีที่ 2
+            }
+
+            // วิธีที่ 2: ใช้ Public CORS Proxy ที่ปลอดภัยเพื่อส่งเข้า Discord
+            try {
+                const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(rawUrl);
+                const proxyRes = await fetch(proxyUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (proxyRes.ok || proxyRes.status === 204) {
+                    return { success: true };
+                }
+            } catch (proxyErr) {}
+
+            // วิธีที่ 3: Beacon API เป็นด่านสุดท้าย
+            try {
+                const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+                if (navigator.sendBeacon(rawUrl, blob)) {
+                    return { success: true };
+                }
+            } catch (beaconErr) {}
+
+            return { success: false, error: 'เบราว์เซอร์บล็อกการส่งไปยัง Discord กรุณาตรวจสอบลิงก์ Webhook' };
+        }
+
+        function safeSendDiscord(payload) {
+            setTimeout(() => {
+                sendToDiscordWebhook(payload).catch(() => {});
             }, 10);
         }
+
+        window.openDiscordModal = function() {
+            const modal = document.getElementById('discord-modal');
+            if (!modal) return;
+            loadDiscordConfig();
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+        };
+
+        window.closeDiscordModal = function() {
+            const modal = document.getElementById('discord-modal');
+            if (modal) modal.classList.add('opacity-0', 'pointer-events-none');
+        };
+
+        window.saveDiscordWebhook = function() {
+            const urlInput = document.getElementById('discord-webhook-url');
+            const notifySet = document.getElementById('webhook-notify-set');
+            const notify5Min = document.getElementById('webhook-notify-5min');
+            const notifySpawn = document.getElementById('webhook-notify-spawn');
+            const mention = document.getElementById('webhook-mention');
+
+            const val = (urlInput?.value || '').trim();
+            if (val && !val.startsWith('https://discord.com/api/webhooks/')) {
+                showToast("URL ต้องขึ้นต้นด้วย https://discord.com/api/webhooks/", "alert-circle");
+                return;
+            }
+
+            discordConfig = {
+                url: val,
+                notifySet: notifySet ? notifySet.checked : true,
+                notify5Min: notify5Min ? notify5Min.checked : true,
+                notifySpawn: notifySpawn ? notifySpawn.checked : true,
+                mention: mention ? mention.value : 'none'
+            };
+
+            localStorage.setItem(DISCORD_KEY, JSON.stringify(discordConfig));
+            updateWebhookButtonState();
+            window.closeDiscordModal();
+            showToast("บันทึกการตั้งค่า Discord Webhook สำเร็จ!", "check-circle");
+        };
+
+        window.clearDiscordWebhook = function() {
+            discordConfig.url = '';
+            localStorage.removeItem(DISCORD_KEY);
+            const urlInput = document.getElementById('discord-webhook-url');
+            if (urlInput) urlInput.value = '';
+            updateWebhookButtonState();
+            window.closeDiscordModal();
+            showToast("ลบ Webhook เรียบร้อยแล้ว", "trash-2");
+        };
+
+        window.testDiscordWebhook = async function() {
+            const urlInput = document.getElementById('discord-webhook-url');
+            const mention = document.getElementById('webhook-mention')?.value || 'none';
+            const url = (urlInput?.value || '').trim();
+
+            if (!url) {
+                showToast("กรุณาวาง Webhook URL ก่อนกดทดสอบ", "alert-triangle");
+                return;
+            }
+
+            showToast("กำลังส่งข้อความทดสอบ...", "loader");
+
+            // อัปเดต URL ชั่วคราวสำหรับการทดสอบ
+            discordConfig.url = url;
+            discordConfig.mention = mention;
+
+            let mentionPrefix = '';
+            if (mention === 'everyone') mentionPrefix = '@everyone ';
+            if (mention === 'here') mentionPrefix = '@here ';
+
+            const testPayload = {
+                content: `${mentionPrefix}🔔 **[ทดสอบการเชื่อมต่อ Binder Town Webhook]**`,
+                embeds: [{
+                    title: "⚔️ เชื่อมต่อสำเร็จ!",
+                    description: "ระบบจับเวลาบอส Binder Town เชื่อมต่อกับห้อง Discord นี้เรียบร้อยแล้ว เมื่อบอสตาย ใกล้เกิด หรือเกิดแล้ว จะมีการแจ้งเตือนส่งมาที่ห้องนี้",
+                    color: 0x5865F2,
+                    fields: [
+                        { name: "สถานะ", value: "✅ Online", inline: true },
+                        { name: "ห้องซิงค์", value: `\`${currentRoomId}\``, inline: true }
+                    ],
+                    footer: { text: "Binder Town Field Boss Timer" },
+                    timestamp: new Date().toISOString()
+                }]
+            };
+
+            const result = await sendToDiscordWebhook(testPayload);
+            if (result.success) {
+                showToast("ข้อความเด้งเข้า Discord เรียบร้อยแล้ว!", "check-circle");
+            } else {
+                showToast("ส่งไม่สำเร็จ: กรุณาตรวจความถูกต้องของ Webhook URL", "x-circle");
+            }
+        };
 
         function getMentionText() {
             if (discordConfig.mention === 'everyone') return '@everyone ';
@@ -1284,7 +1408,7 @@
             setRoomURL(currentRoomId);
 
             loadDiscordConfig();
-            loadLocalState(); // โหลดสถานะที่เคยบันทึกไว้ในเครื่อง
+            loadLocalState();
 
             const savedSound = localStorage.getItem(SOUND_KEY);
             if (savedSound !== null) soundEnabled = savedSound === 'true';
