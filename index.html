@@ -411,6 +411,9 @@
         const DISCORD_KEY = 'binder_discord_webhook_v1';
         const NTFY_PREFIX = 'bindertown_party_';
 
+        // ป้องกันเวลาเก่าค้าง: ถ้าเวลาเกิดผ่านไปเกิน 10 นาทีแล้ว จะไม่ส่งเตือน ALIVE ย้อนหลัง
+        const ALIVE_WEBHOOK_WINDOW_MS = 10 * 60 * 1000;
+
         let currentRoomId = 'party-1';
         let nickname = localStorage.getItem(NICK_KEY) || 'เพื่อนในปาร์ตี้';
         let bossStateMap = {};
@@ -628,7 +631,14 @@
                     return r.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 30);
                 }
             } catch (e) {}
-            return localStorage.getItem('binder_room_v4') || 'party-1';
+            // ถ้าไม่มี ให้ดึงจาก storage หรือตั้ง default ที่ปลอดภัย
+            let saved = localStorage.getItem('binder_room_v4');
+            if (!saved) {
+                // สร้างห้องเฉพาะ เช่น room-xxxx เพื่อไม่ให้ชนประวัติเก่าของคนอื่น
+                saved = 'room-' + Math.random().toString(36).substring(2, 7);
+                localStorage.setItem('binder_room_v4', saved);
+            }
+            return saved;
         }
 
         function setRoomURL(room) {
@@ -1382,7 +1392,7 @@
                     }
                 }
 
-                // 1. เตือน 5 นาทีล่วงหน้า (Trigger ครั้งเดียวเท่านั้น)
+                // 1. เตือน 5 นาทีล่วงหน้า (Trigger ครั้งเดียวเท่านั้น และต้องเป็นช่วง 0 ถึง 5 นาที)
                 if (diff > 0 && diff <= 5 * 60 * 1000) {
                     if (!warned5MinBosses.has(boss.id)) {
                         warned5MinBosses.add(boss.id);
@@ -1395,17 +1405,24 @@
                     }
                 }
 
-                // 2. เตือนเมื่อบอสเกิด (Trigger ครั้งเดียวเท่านั้น)
+                // 2. เตือนเมื่อบอสเกิด (Trigger ครั้งเดียว และต้องไม่เลยเวลาเกิดเกิน 10 นาที ป้องกันของเก่าค้าง)
                 if (diff <= 0) {
                     if (!alertedBosses.has(boss.id)) {
                         alertedBosses.add(boss.id);
-                        playSpawnChime();
-                        showToast(`⚔️ [${boss.name}] เกิดแล้ว!`, "swords");
+                        // ถ้าเวลาเกิดไม่ได้เก่าเกิน 10 นาที จึงจะส่งเสียงเตือน
+                        if (Math.abs(diff) < ALIVE_WEBHOOK_WINDOW_MS) {
+                            playSpawnChime();
+                            showToast(`⚔️ [${boss.name}] เกิดแล้ว!`, "swords");
+                        }
                         needReRender = true;
                     }
+
+                    // Webhook ต้องยิงเฉพาะบอสที่เพิ่งเกิดสดๆ เท่านั้น (ไม่ยิงบอสที่ตายตั้งแต่ชม.ที่แล้ว)
                     if (!webhookSentAlive.has(boss.id)) {
                         webhookSentAlive.add(boss.id);
-                        sendDiscordBossAlive(boss);
+                        if (Math.abs(diff) < ALIVE_WEBHOOK_WINDOW_MS) {
+                            sendDiscordBossAlive(boss);
+                        }
                     }
                 }
             });
